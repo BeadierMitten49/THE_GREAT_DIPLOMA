@@ -13,6 +13,9 @@ wiki/.obsidian/
 # Env
 .env
 
+# Logs
+logs/
+
 # Python
 __pycache__/
 *.py[cod]

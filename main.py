@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 
+from src.infrastructure.logging_setup import setup_logging
 from src.presentation.api.v1 import router as api_router
+
+setup_logging()
 
 app = FastAPI(
     title="АИС «Ярко»",
