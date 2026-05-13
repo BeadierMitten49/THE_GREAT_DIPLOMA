@@ -34,14 +34,16 @@ LOG_RECORD_BUILTIN_ATTRS = {
     "taskName",
 }
 
-TIMEZONE = ZoneInfo("Europe/Moscow")
+TIMEZONE = ZoneInfo("Asia/Krasnoyarsk")
 
 
 def setup_logging() -> None:
     config_file = os.getenv("LOGS_SETUP_FILE", "logs_setup.json")
+    logs_file = os.getenv("LOGS_FILE", "logs/app.log.jsonl")
+    os.makedirs(os.path.dirname(logs_file), exist_ok=True)
     with open(config_file) as f_in:
         config = json.load(f_in)
-    config["handlers"]["file_json"]["filename"] = os.getenv("LOGS_FILE", "logs/app.log.jsonl")
+    config["handlers"]["file_json"]["filename"] = logs_file
     config["loggers"]["root"]["level"] = os.getenv("LOG_LEVEL", "INFO")
     logging.config.dictConfig(config)
     queue_handler = logging.getHandlerByName("queue_handler")
