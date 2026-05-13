@@ -11,8 +11,5 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str = "HS256"
 
-    # Telegram
-    telegram_bot_token: str = ""
-
 
 settings = Settings()
