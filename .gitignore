@@ -1,0 +1,30 @@
+# Wiki — global meta files (shared across all branches, not version-controlled)
+wiki/sources/
+wiki/concepts/
+wiki/log.md
+wiki/hot.md
+wiki/index.md
+wiki/overview.md
+wiki/.obsidian/
+
+# Wiki raw source files
+.raw/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# claude
+.claude/
+
+# project
+.env
