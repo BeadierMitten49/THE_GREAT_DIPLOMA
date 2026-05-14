@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # Auth
     secret_key: str
     algorithm: str = "HS256"
+    jwt_access_ttl_minutes: int = 15
 
 
 settings = Settings()

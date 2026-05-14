@@ -6,11 +6,15 @@ erDiagram
         int id PK
         string username
         string full_name
-        string hashed_password
         bool is_active
         string telegram_username
         bigint telegram_id
         datetime created_at
+    }
+    user_credentials {
+        int user_id PK
+        string hashed_password
+        datetime updated_at
     }
     user_roles {
         int user_id FK
@@ -215,6 +219,7 @@ erDiagram
     }
 
     %% Пользователи
+    users ||--|| user_credentials : ""
     users ||--o{ user_roles : ""
     users ||--o{ auth_log : ""
     users ||--o{ refresh_tokens : ""

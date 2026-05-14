@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from src.presentation.api.v1.dependencies import director_only
 from src.presentation.api.v1.references.dependencies import get_packaging_service
 from src.presentation.api.v1.references.schemas import (
     CreatePackagingRequest,
@@ -8,7 +9,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import PackagingService
 
-router = APIRouter(prefix="/packaging", tags=["Packaging"])
+router = APIRouter(prefix="/packaging", tags=["Packaging"], dependencies=[director_only])
 
 
 def _to_response(entity) -> PackagingResponse:

@@ -75,31 +75,31 @@ class CustomerService:
 > Ветка: `feature/auth`
 
 **Domain**
-- [ ] `User` entity, `Role` value object
-- [ ] `IUserRepository` интерфейс
+- [x] `User` entity, `Role` value object
+- [x] `IUserRepository` интерфейс
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `users`, `user_roles`, `auth_log`, `refresh_tokens`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `users`, `user_roles`, `auth_log`, `refresh_tokens`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`
-- [ ] Use cases auth: `login`, `refresh_token`, `logout`
-- [ ] `INotificationService` port (заглушка, реализация — в Phase 7)
-- [ ] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
+- [x] Use cases: `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`
+- [x] Use cases auth: `login`, `refresh_tokens`, `logout`
+- [x] `INotificationService` port (заглушка, реализация — в Phase 7)
+- [x] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
 
 **Presentation**
-- [ ] `AuthService`, `UserService`
-- [ ] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
-- [ ] Эндпоинты управления пользователями (только директор)
-- [ ] `dependencies.py` — `get_current_user`, `require_role(...)`
+- [x] `AuthService`, `UserService`
+- [x] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
+- [x] Эндпоинты управления пользователями (только директор)
+- [x] `dependencies.py` — `get_current_user`, `require_role(...)`
 
 **Tests**
-- [ ] Unit тесты domain
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API: login, refresh, блокировка
+- [x] Unit тесты domain
+- [x] Unit тесты use cases
+- [x] Integration тесты репозиториев
+- [x] Integration тесты API: login, refresh, блокировка
 
 ---
 

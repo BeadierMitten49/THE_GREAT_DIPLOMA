@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from src.presentation.api.v1.dependencies import director_only
 from src.presentation.api.v1.references.dependencies import get_product_service
 from src.presentation.api.v1.references.schemas import (
     CreateProductRequest,
@@ -10,7 +11,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import ProductService
 
-router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter(prefix="/products", tags=["Products"], dependencies=[director_only])
 
 
 def _to_response(entity) -> ProductResponse:

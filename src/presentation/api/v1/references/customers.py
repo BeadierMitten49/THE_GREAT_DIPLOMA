@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from src.presentation.api.v1.dependencies import director_only
 from src.presentation.api.v1.references.dependencies import get_customer_service
 from src.presentation.api.v1.references.schemas import (
     CreateCustomerRequest,
@@ -8,7 +9,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import CustomerService
 
-router = APIRouter(prefix="/customers", tags=["Customers"])
+router = APIRouter(prefix="/customers", tags=["Customers"], dependencies=[director_only])
 
 
 def _to_response(entity) -> CustomerResponse:
