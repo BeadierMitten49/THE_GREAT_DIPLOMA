@@ -41,8 +41,28 @@ tags: [entity, references, aggregate-root]
 
 ## Расположение в коде
 
-- Domain: `src/domain/references/entities.py`
-- Repository interface: `src/domain/references/interfaces.py` → `IProductRepository`
-- SQLAlchemy model: `src/infrastructure/db/models/references.py` → `ProductModel`
-- Repository impl: `src/infrastructure/db/repositories/references.py` → `ProductRepository`
-- DB table: `products`
+| Слой | Файл | Символ |
+|------|------|--------|
+| Domain | `src/domain/references/entities.py` | `Product` |
+| Domain | `src/domain/references/interfaces.py` | `IProductRepository` |
+| Infrastructure | `src/infrastructure/db/models/references.py` | `ProductModel` |
+| Infrastructure | `src/infrastructure/db/repositories/references.py` | `ProductRepository` |
+| Application | `src/application/references/use_cases.py` | `get_product`, `get_products`, `create_product`, `update_product`, `set_product_recipe`, `deactivate_product`, `activate_product` |
+| Application | `src/application/references/dto.py` | `CreateProductDTO`, `UpdateProductDTO`, `RecipeLineDTO` |
+| Presentation | `src/presentation/api/v1/references/service.py` | `ProductService` |
+| Presentation | `src/presentation/api/v1/references/products.py` | router |
+| Presentation | `src/presentation/api/v1/references/schemas.py` | `CreateProductRequest`, `UpdateProductRequest`, `ProductResponse`, `RecipeLineRequest`, `RecipeLineResponse`, `SetRecipeRequest` |
+
+## API-эндпоинты
+
+| Метод | Путь | Описание |
+|-------|------|---------|
+| GET | `/api/v1/references/products` | Список |
+| GET | `/api/v1/references/products/{id}` | Получить по ID (включает рецептуру) |
+| POST | `/api/v1/references/products` | Создать (201) |
+| PATCH | `/api/v1/references/products/{id}` | Обновить (200) |
+| PUT | `/api/v1/references/products/{id}/recipe` | Заменить рецептуру целиком (204) |
+| POST | `/api/v1/references/products/{id}/deactivate` | Деактивировать (204) |
+| POST | `/api/v1/references/products/{id}/activate` | Активировать (204) |
+
+## DB table: `products`

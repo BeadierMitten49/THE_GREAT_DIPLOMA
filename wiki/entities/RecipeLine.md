@@ -40,6 +40,12 @@ tags: [entity, references]
 
 ## Расположение в коде
 
-- Domain: `src/domain/references/entities.py`
-- SQLAlchemy model: `src/infrastructure/db/models/references.py` → `RecipeLineModel`
-- DB table: `recipes`
+| Слой | Файл | Символ |
+|------|------|--------|
+| Domain | `src/domain/references/entities.py` | `RecipeLine` |
+| Infrastructure | `src/infrastructure/db/models/references.py` | `RecipeLineModel` |
+| Infrastructure | `src/infrastructure/db/repositories/references.py` | `ProductRepository._sync_recipe()` |
+| Application | `src/application/references/dto.py` | `RecipeLineDTO` |
+| Presentation | `src/presentation/api/v1/references/schemas.py` | `RecipeLineRequest`, `RecipeLineResponse` |
+
+## DB table: `recipes`
