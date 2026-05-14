@@ -2,7 +2,14 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from src.domain.references.exceptions import InvalidFieldError
-from src.domain.references.value_objects import RecipeLine
+
+
+@dataclass
+class RecipeLine:
+    raw_material_id: int
+    consumption_per_unit: Decimal
+    waste_percentage: Decimal  # 0..100
+    id: int | None = None
 
 
 def _require_positive_int(value: int, field_name: str) -> None:

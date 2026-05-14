@@ -7,9 +7,9 @@ from src.domain.references.entities import (
     PackagingCatalog,
     Product,
     RawMaterialCatalog,
+    RecipeLine,
 )
 from src.domain.references.exceptions import InvalidFieldError
-from src.domain.references.value_objects import RecipeLine
 
 pytestmark = pytest.mark.unit
 
@@ -266,19 +266,13 @@ class TestPackagingCatalogActivation:
 
 
 # ---------------------------------------------------------------------------
-# RecipeLine (value object)
+# RecipeLine
 # ---------------------------------------------------------------------------
 
 
 class TestRecipeLine:
-    def test_equal_instances_with_same_values(self, recipe_line):
-        other = RecipeLine(
-            raw_material_id=1,
-            consumption_per_unit=Decimal("1.05"),
-            waste_percentage=Decimal("2.0"),
-        )
-        assert recipe_line == other
-
-    def test_is_immutable(self, recipe_line):
-        with pytest.raises(Exception):
-            recipe_line.raw_material_id = 99  # type: ignore[misc]
+    def test_create_with_valid_data(self, recipe_line):
+        assert recipe_line.raw_material_id == 1
+        assert recipe_line.consumption_per_unit == Decimal("1.05")
+        assert recipe_line.waste_percentage == Decimal("2.0")
+        assert recipe_line.id is None

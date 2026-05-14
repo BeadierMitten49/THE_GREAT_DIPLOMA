@@ -7,8 +7,8 @@ from src.domain.references.entities import (
     PackagingCatalog,
     Product,
     RawMaterialCatalog,
+    RecipeLine,
 )
-from src.domain.references.value_objects import RecipeLine
 
 
 @pytest.fixture
