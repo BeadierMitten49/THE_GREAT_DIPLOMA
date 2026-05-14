@@ -79,15 +79,15 @@ class CustomerService:
 - [x] `IUserRepository` интерфейс
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `users`, `user_roles`, `auth_log`, `refresh_tokens`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `users`, `user_roles`, `auth_log`, `refresh_tokens`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`
-- [ ] Use cases auth: `login`, `refresh_token`, `logout`
-- [ ] `INotificationService` port (заглушка, реализация — в Phase 7)
-- [ ] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
+- [x] Use cases: `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`
+- [x] Use cases auth: `login`, `refresh_tokens`, `logout`
+- [x] `INotificationService` port (заглушка, реализация — в Phase 7)
+- [x] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
 
 **Presentation**
 - [ ] `AuthService`, `UserService`
@@ -98,7 +98,7 @@ class CustomerService:
 **Tests**
 - [x] Unit тесты domain
 - [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
+- [x] Integration тесты репозиториев
 - [ ] Integration тесты API: login, refresh, блокировка
 
 ---

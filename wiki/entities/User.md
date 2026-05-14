@@ -58,8 +58,11 @@ username / id        ← полностью привязан
 |------|------|--------|
 | Domain | `src/domain/auth/entities.py` | `User` |
 | Domain | `src/domain/auth/interfaces.py` | `IUserRepository` |
-| Application (port) | `src/application/ports/auth.py` | `IUserCredentialRepository` |
-| Infrastructure | `src/infrastructure/db/models/auth.py` | `UserModel`, `UserCredentialModel` |
-| Infrastructure | `src/infrastructure/db/repositories/auth.py` | `UserRepository`, `UserCredentialRepository` |
+| Application (use cases) | `src/application/auth/use_cases.py` | `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`, `login`, `refresh_tokens`, `logout` |
+| Application (port) | `src/application/ports/auth.py` | `IUserCredentialRepository`, `IRefreshTokenRepository`, `IAuthLogRepository`, `IPasswordHasher`, `IJWTService` |
+| Infrastructure (models) | `src/infrastructure/db/models/auth.py` | `UserModel`, `UserCredentialModel`, `UserRoleModel`, `AuthLogModel`, `RefreshTokenModel` |
+| Infrastructure (repos) | `src/infrastructure/db/repositories/auth.py` | `UserRepository`, `UserCredentialRepository`, `RefreshTokenRepository`, `AuthLogRepository` |
+| Infrastructure (security) | `src/infrastructure/security/password_hasher.py` | `BcryptPasswordHasher` |
+| Infrastructure (security) | `src/infrastructure/security/jwt_service.py` | `JWTService` |
 
-## DB tables: `users`, `user_credentials`, `user_roles`
+## DB tables: `users`, `user_credentials`, `user_roles`, `auth_log`, `refresh_tokens`

@@ -38,10 +38,11 @@ yarko/
 │   │   │   ├── value_objects.py       ← DeliveryStatus
 │   │   │   └── interfaces.py
 │   │   │
-│   │   ├── users/
-│   │   │   ├── entities.py            ← User, Role
-│   │   │   ├── value_objects.py       ← TelegramBinding
-│   │   │   └── interfaces.py
+│   │   ├── auth/                      ← ✅ реализован
+│   │   │   ├── entities.py            ← User
+│   │   │   ├── value_objects.py       ← Role (StrEnum)
+│   │   │   ├── interfaces.py          ← IUserRepository
+│   │   │   └── exceptions.py
 │   │   │
 │   │   └── shared/                    ← Общие примитивы домена
 │   │       ├── repository.py          ← IRepository[T] — generic base interface
@@ -74,12 +75,13 @@ yarko/
 │   │   │   ├── dto.py
 │   │   │   └── exceptions.py
 │   │   │
-│   │   ├── users/
-│   │   │   ├── use_cases.py           ← create_user, deactivate_user, reset_password, bind_telegram
-│   │   │   ├── dto.py
-│   │   │   └── exceptions.py
+│   │   ├── auth/                      ← ✅ реализован
+│   │   │   ├── use_cases.py           ← create_user, deactivate_user, reset_password, bind_telegram, login, refresh_tokens, logout
+│   │   │   ├── dto.py                 ← CreateUserDTO, LoginDTO, TokenPairDTO, ...
+│   │   │   └── exceptions.py         ← AuthenticationError, RateLimitError, InvalidTokenError
 │   │   │
 │   │   └── ports/                     ← Интерфейсы для внешних сервисов
+│   │       ├── auth.py                ← IUserCredentialRepository, IRefreshTokenRepository, IAuthLogRepository, IPasswordHasher, IJWTService
 │   │       └── notification_port.py   ← INotificationService (реализация — в infrastructure)
 │   │
 │   ├── infrastructure/                ← Реализации интерфейсов. Зависит на фреймворки и БД.
@@ -88,22 +90,25 @@ yarko/
 │   │   │   ├── models/                ← SQLAlchemy-модели (ORM)
 │   │   │   │   ├── __init__.py        ← Annotated-типы: intpk, str_nn, bool_active
 │   │   │   │   ├── references.py      ← ✅ CustomerModel, ProductModel, RecipeLineModel, ...
+│   │   │   │   ├── auth.py            ← ✅ UserModel, UserCredentialModel, UserRoleModel, AuthLogModel, RefreshTokenModel
 │   │   │   │   ├── order.py
 │   │   │   │   ├── production.py
 │   │   │   │   ├── warehouse.py
-│   │   │   │   ├── delivery.py
-│   │   │   │   ├── user.py
-│   │   │   │   └── auth_log.py        ← лог попыток входа (SRS §4.1.1)
+│   │   │   │   └── delivery.py
 │   │   │   ├── repositories/          ← реализации IXxxRepository
-│   │   │   │   ├── base.py            ← BaseCatalogRepository[TEntity, TModel]
+│   │   │   │   ├── base.py            ← BaseRepository, BaseCatalogRepository
 │   │   │   │   ├── references.py      ← ✅ CustomerRepository, ProductRepository, ...
+│   │   │   │   ├── auth.py            ← ✅ UserRepository, UserCredentialRepository, RefreshTokenRepository, AuthLogRepository
 │   │   │   │   ├── order_repo.py
 │   │   │   │   ├── production_repo.py
 │   │   │   │   ├── warehouse_repo.py
-│   │   │   │   ├── delivery_repo.py
-│   │   │   │   └── user_repo.py
+│   │   │   │   └── delivery_repo.py
 │   │   │   ├── migrations/            ← Alembic
 │   │   │   └── session.py
+│   │   │
+│   │   ├── security/                  ← ✅ реализован
+│   │   │   ├── password_hasher.py     ← BcryptPasswordHasher (реализация IPasswordHasher)
+│   │   │   └── jwt_service.py         ← JWTService (реализация IJWTService)
 │   │   │
 │   │   ├── telegram/
 │   │   │   ├── bot.py                 ← инициализация, обработка /start → привязка Telegram ID
@@ -138,7 +143,8 @@ yarko/
 │   ├── conftest.py                    ← регистрация маркеров: unit, integration, smoke
 │   ├── unit/
 │   │   ├── domain/                    ← тесты сущностей (без БД, без фреймворков)
-│   │   └── application/               ← тесты use cases (fake-репозитории в памяти)
+│   │   ├── application/               ← тесты use cases (fake-репозитории в памяти)
+│   │   └── infrastructure/            ← тесты инфраструктурных сервисов (security и др.)
 │   └── integration/
 │       ├── db/repositories/           ← тесты репозиториев (SQLite aiosqlite, savepoint-rollback)
 │       └── api/                       ← тесты API (httpx.AsyncClient + dependency_overrides)

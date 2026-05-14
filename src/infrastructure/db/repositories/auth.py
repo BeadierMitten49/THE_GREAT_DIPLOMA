@@ -1,12 +1,14 @@
-from sqlalchemy import delete, select, update
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.application.ports.auth import IUserCredentialRepository
+from src.application.ports.auth import IAuthLogRepository, IRefreshTokenRepository, IUserCredentialRepository, RefreshTokenData
 from src.domain.auth.entities import User
 from src.domain.auth.interfaces import IUserRepository
 from src.domain.auth.value_objects import Role
-from src.infrastructure.db.models.auth import UserCredentialModel, UserModel, UserRoleModel
+from src.infrastructure.db.models.auth import AuthLogModel, RefreshTokenModel, UserCredentialModel, UserModel, UserRoleModel
 from src.infrastructure.db.repositories.base import BaseRepository
 
 
@@ -116,3 +118,57 @@ class UserCredentialRepository(IUserCredentialRepository):
             .values(hashed_password=hashed_password)
         )
         await self._session.flush()
+
+
+class RefreshTokenRepository(IRefreshTokenRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def save(self, user_id: int, token: str) -> None:
+        self._session.add(RefreshTokenModel(user_id=user_id, token=token))
+        await self._session.flush()
+
+    async def get_by_token(self, token: str) -> RefreshTokenData | None:
+        model = await self._session.scalar(
+            select(RefreshTokenModel).where(RefreshTokenModel.token == token)
+        )
+        return RefreshTokenData(user_id=model.user_id) if model else None
+
+    async def revoke(self, token: str) -> None:
+        await self._session.execute(
+            delete(RefreshTokenModel).where(RefreshTokenModel.token == token)
+        )
+        await self._session.flush()
+
+    async def revoke_all_for_user(self, user_id: int) -> None:
+        await self._session.execute(
+            delete(RefreshTokenModel).where(RefreshTokenModel.user_id == user_id)
+        )
+        await self._session.flush()
+
+
+class AuthLogRepository(IAuthLogRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def log_attempt(
+        self,
+        username_attempt: str,
+        user_id: int | None,
+        success: bool,
+    ) -> None:
+        self._session.add(
+            AuthLogModel(username_attempt=username_attempt, user_id=user_id, success=success)
+        )
+        await self._session.flush()
+
+    async def count_failed_recent(self, username: str, window_seconds: int = 1800) -> int:
+        since = datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
+        result = await self._session.scalar(
+            select(func.count(AuthLogModel.id)).where(
+                AuthLogModel.username_attempt == username,
+                AuthLogModel.success.is_(False),
+                AuthLogModel.created_at >= since,
+            )
+        )
+        return result or 0

@@ -2,6 +2,13 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.infrastructure.db.models import Base
+from src.infrastructure.db.models.auth import (  # noqa: F401 — register models
+    AuthLogModel,
+    RefreshTokenModel,
+    UserCredentialModel,
+    UserModel,
+    UserRoleModel,
+)
 from src.infrastructure.db.models.references import (  # noqa: F401 — register models
     CustomerModel,
     PackagingCatalogModel,
