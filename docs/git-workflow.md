@@ -93,6 +93,11 @@ refactor(auth): extract rate limiter to shared middleware
 test(orders): add integration test for order reservation flow
 chore: add alembic migration for auth_log table
 docs: update git workflow
+
+# merge feature-ветки в develop — тип отражает содержимое модуля:
+feat(references): merge feature/references → develop — реализован модуль справочников
+feat(auth): merge feature/auth → develop — реализована авторизация
+fix(warehouse): merge hotfix/batch-reset → develop
 ```
 
 ---
