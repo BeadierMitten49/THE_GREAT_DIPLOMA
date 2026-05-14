@@ -90,16 +90,16 @@ class CustomerService:
 - [x] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
 
 **Presentation**
-- [ ] `AuthService`, `UserService`
-- [ ] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
+- [x] `AuthService`, `UserService`
+- [x] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
 - [ ] Эндпоинты управления пользователями (только директор)
-- [ ] `dependencies.py` — `get_current_user`, `require_role(...)`
+- [x] `dependencies.py` — `get_current_user`, `require_role(...)`
 
 **Tests**
 - [x] Unit тесты domain
-- [ ] Unit тесты use cases
+- [x] Unit тесты use cases
 - [x] Integration тесты репозиториев
-- [ ] Integration тесты API: login, refresh, блокировка
+- [x] Integration тесты API: login, refresh, блокировка
 
 ---
 
