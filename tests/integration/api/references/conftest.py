@@ -13,6 +13,9 @@ from src.domain.references.entities import (
     RawMaterialCatalog,
     RecipeLine,
 )
+from src.domain.auth.entities import User
+from src.domain.auth.value_objects import Role
+from src.presentation.api.v1.auth.dependencies import get_current_user
 from src.presentation.api.v1.references.dependencies import (
     get_customer_service,
     get_packaging_service,
@@ -233,8 +236,13 @@ def packaging_svc() -> FakePackagingService:
     return FakePackagingService()
 
 
+def _make_director() -> User:
+    return User(username="director", full_name="Director", roles=[Role.director], id=1)
+
+
 @pytest_asyncio.fixture
 async def client(customer_svc, product_svc, raw_material_svc, packaging_svc) -> AsyncClient:
+    app.dependency_overrides[get_current_user] = lambda: _make_director()
     app.dependency_overrides[get_customer_service] = lambda: customer_svc
     app.dependency_overrides[get_product_service] = lambda: product_svc
     app.dependency_overrides[get_raw_material_service] = lambda: raw_material_svc
