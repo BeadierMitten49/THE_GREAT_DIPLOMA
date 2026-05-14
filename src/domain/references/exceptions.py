@@ -1,9 +1,3 @@
-class DomainError(Exception):
-    pass
+from src.domain.shared.exceptions import DomainError, InvalidFieldError
 
-
-class InvalidFieldError(DomainError):
-    def __init__(self, field: str, reason: str) -> None:
-        self.field = field
-        self.reason = reason
-        super().__init__(f"{field}: {reason}")
+__all__ = ["DomainError", "InvalidFieldError"]
