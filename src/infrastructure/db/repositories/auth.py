@@ -6,11 +6,16 @@ from src.domain.auth.entities import User
 from src.domain.auth.interfaces import IUserRepository
 from src.domain.auth.value_objects import Role
 from src.infrastructure.db.models.auth import UserModel, UserRoleModel
+from src.infrastructure.db.repositories.base import BaseRepository
 
 
-class UserRepository(IUserRepository):
+class UserRepository(BaseRepository[User, UserModel], IUserRepository):
     def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+        super().__init__(session)
+
+    @property
+    def _model_class(self) -> type[UserModel]:
+        return UserModel
 
     def _to_entity(self, model: UserModel) -> User:
         return User(
@@ -62,19 +67,7 @@ class UserRepository(IUserRepository):
         return result.scalar() is not None
 
     async def save(self, user: User) -> int:
-        if user.id is None:
-            model = UserModel(**self._to_values(user))
-            self._session.add(model)
-            await self._session.flush()
-            user.id = model.id
-        else:
-            stmt = select(UserModel).where(UserModel.id == user.id)
-            result = await self._session.execute(stmt)
-            model = result.scalar_one()
-            for key, val in self._to_values(user).items():
-                setattr(model, key, val)
-            await self._session.flush()
-
+        await super().save(user)
         await self._sync_roles(user.id, user.roles)
         return user.id
 

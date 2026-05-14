@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class BaseCatalogRepository[TEntity, TModel](ABC):
+class BaseRepository[TEntity, TModel](ABC):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -44,10 +44,3 @@ class BaseCatalogRepository[TEntity, TModel](ABC):
                 .values(**values)
             )
             return entity.id
-
-    async def exists_by_name(self, name: str, exclude_id: int | None = None) -> bool:
-        stmt = select(self._model_class.id).where(self._model_class.name == name)
-        if exclude_id is not None:
-            stmt = stmt.where(self._model_class.id != exclude_id)
-        result = await self._session.execute(stmt)
-        return result.scalar() is not None
