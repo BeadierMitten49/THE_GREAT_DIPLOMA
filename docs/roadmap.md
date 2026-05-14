@@ -3,6 +3,28 @@
 Порядок разработки соответствует зависимостям между модулями.
 Каждый модуль = ветка `feature/<module>` от `develop`.
 
+## Соглашения по слоям
+
+**Application** — use cases как чистые `async`-функции, репозитории передаются явно:
+```python
+async def create_customer(dto: CreateCustomerDTO, repo: ICustomerRepository) -> int
+```
+DTO — frozen dataclasses. Исключения: `NotFoundError`, `AlreadyExistsError` в `exceptions.py`.
+
+**Presentation** — service-класс на каждый агрегат скрывает создание репо и DTO от роутера:
+```python
+class CustomerService:
+    def __init__(self, session: AsyncSession) -> None: ...
+    async def create(self, name: str, ...) -> int: ...
+```
+Роутер вызывает только методы сервиса. Exception handlers — в `presentation/api/exception_handlers.py`.
+
+**Tests** — четыре уровня на каждый модуль:
+1. Unit domain — чистые сущности, без БД
+2. Unit use cases — fake-репозитории в памяти
+3. Integration repo — SQLite aiosqlite, savepoint-rollback
+4. Integration API — `httpx.AsyncClient` + `dependency_overrides`
+
 ---
 
 ## Phase 0 — Setup ✅
@@ -13,31 +35,39 @@
 
 ---
 
-## Phase 1 — References (справочники)
-> Ветка: `feature/references`
+## Phase 1 — References (справочники) ✅
+> Ветка: `feature/references` → влита в `develop`
 
 **Domain**
-- [x] `customers` — entity, value objects
+- [x] `customers` — entity
 - [x] `products` — entity (units_per_box, shelf_life_days, critical_stock)
 - [x] `raw_materials_catalog` — entity
 - [x] `packaging_catalog` — entity
 - [x] `recipes` — entity (consumption_per_unit, waste_percentage)
+- [x] `IRepository[T]` — generic base interface в `domain/shared/`
 
 **Infrastructure**
 - [x] SQLAlchemy модели для всех справочников
+- [x] `BaseCatalogRepository[TEntity, TModel]` — generic base repo
 - [x] Репозитории (CRUD + деактивация)
 - [x] Alembic миграция
 
 **Application**
-- [x] Use cases: создание, редактирование, деактивация записей справочников
+- [x] Use cases: `get_*`, `create_*`, `update_*`, `deactivate_*`, `activate_*` для каждого справочника
+- [x] `set_product_recipe` — атомарная замена рецептуры
+- [x] DTO, `NotFoundError`, `AlreadyExistsError`
 
 **Presentation**
-- [x] CRUD эндпоинты для каждого справочника
-- [x] Pydantic схемы
+- [x] Service-классы: `CustomerService`, `ProductService`, `RawMaterialService`, `PackagingService`
+- [x] CRUD эндпоинты для каждого справочника (`/api/v1/references/*`)
+- [x] Pydantic схемы, dependencies
+- [x] Exception handlers в `presentation/api/exception_handlers.py`
 
 **Tests**
-- [x] Unit тесты domain
-- [x] Integration тесты репозиториев
+- [x] Unit тесты domain (55)
+- [x] Unit тесты use cases (43)
+- [x] Integration тесты репозиториев (25)
+- [x] Integration тесты API (48)
 
 ---
 
@@ -54,20 +84,22 @@
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases: `CreateUser`, `DeactivateUser`, `ResetPassword`, `BindTelegram`
+- [ ] Use cases: `create_user`, `deactivate_user`, `reset_password`, `bind_telegram`
+- [ ] Use cases auth: `login`, `refresh_token`, `logout`
 - [ ] `INotificationService` port (заглушка, реализация — в Phase 7)
+- [ ] Rate limit логика: блокировка после 5 неудачных попыток на 30 минут
 
 **Presentation**
-- [ ] `POST /auth/login` — выдача access + refresh токенов
-- [ ] `POST /auth/refresh` — обновление access токена
-- [ ] `POST /auth/logout`
+- [ ] `AuthService`, `UserService`
+- [ ] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
 - [ ] Эндпоинты управления пользователями (только директор)
 - [ ] `dependencies.py` — `get_current_user`, `require_role(...)`
-- [ ] Rate limiting: блокировка после 5 неудачных попыток на 30 минут
 
 **Tests**
-- [ ] Unit тесты: rate limit логика, JWT
-- [ ] Integration тесты: login, refresh, блокировка
+- [ ] Unit тесты domain
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API: login, refresh, блокировка
 
 ---
 
@@ -87,17 +119,20 @@
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases сырья: `RawMaterialArrival`, `RawMaterialWriteOff`, `ReserveRawMaterial`, `ReleaseRawMaterialReservation`
-- [ ] Use cases упаковки: `PackagingArrival`, `PackagingWriteOff`
-- [ ] Use cases продукции: `FinishedGoodsArrival`, `ReserveFinishedGoods`, `ReleaseFinishedGoodsReservation`, `ShipFinishedGoods`
+- [ ] Use cases сырья: `raw_material_arrival`, `raw_material_write_off`, `reserve_raw_material`, `release_raw_material_reservation`
+- [ ] Use cases упаковки: `packaging_arrival`, `packaging_write_off`
+- [ ] Use cases продукции: `finished_goods_arrival`, `reserve_finished_goods`, `release_finished_goods_reservation`, `ship_finished_goods`
 
 **Presentation**
+- [ ] Service-классы по агрегатам
 - [ ] Эндпоинты склада сырья, упаковки, продукции
 - [ ] Эндпоинты отгрузок (список заказов в статусе «Сборка», кнопка «Выдано»)
 
 **Tests**
-- [ ] Unit тесты: резервирование, критический остаток, batch_number reset
-- [ ] Integration тесты
+- [ ] Unit тесты domain: резервирование, критический остаток, batch_number reset
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API
 
 ---
 
@@ -116,17 +151,20 @@
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases: `CreateTask`, `StartTask`, `StopTask`, `ResumeTask`, `CompleteTask` (отчёт сотрудника), `CloseTask` (директор)
-- [ ] Use case: `ReassignTask`, `DeleteTask`
+- [ ] Use cases: `create_task`, `start_task`, `stop_task`, `resume_task`, `complete_task`, `close_task`
+- [ ] Use cases: `reassign_task`, `delete_task`
 - [ ] Логика связи с заказом (order_task)
 
 **Presentation**
+- [ ] `ProductionTaskService`
 - [ ] Эндпоинты задач (по ролям: производство видит только свои)
 - [ ] Эндпоинт завершения с формой отчёта
 
 **Tests**
-- [ ] Unit тесты: расчёт сырья, state machine задачи
-- [ ] Integration тесты
+- [ ] Unit тесты domain: расчёт сырья, state machine задачи
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API
 
 ---
 
@@ -143,17 +181,20 @@
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases: `CreateOrder`, `ChangeOrderStatus`, `EditOrder`, `DeleteOrder`
+- [ ] Use cases: `create_order`, `change_order_status`, `edit_order`, `delete_order`
 - [ ] Логика резервирования продукции при переходе в «Сборка»
 - [ ] Аварийное снятие резерва директором
 
 **Presentation**
+- [ ] `OrderService`
 - [ ] Эндпоинты заказов
 - [ ] Эндпоинт аварийного снятия резерва
 
 **Tests**
-- [ ] Unit тесты: логика начального статуса, переходы состояний
-- [ ] Integration тесты: полный цикл заказа
+- [ ] Unit тесты domain: логика начального статуса, переходы состояний
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API: полный цикл заказа
 
 ---
 
@@ -169,14 +210,17 @@
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases: `PickUpOrder`, `StartDelivery`, `CompleteDelivery`, `CancelDelivery`
+- [ ] Use cases: `pick_up_order`, `start_delivery`, `complete_delivery`, `cancel_delivery`
 
 **Presentation**
+- [ ] `DeliveryService`
 - [ ] Эндпоинты доставки (водитель видит только свои)
 
 **Tests**
-- [ ] Unit тесты: state machine доставки
-- [ ] Integration тесты
+- [ ] Unit тесты domain: state machine доставки
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API
 
 ---
 
@@ -197,7 +241,7 @@
 - [ ] Webhook / polling для бота
 
 **Tests**
-- [ ] Unit тесты с mock INotificationService
+- [ ] Unit тесты use cases с mock `INotificationService`
 - [ ] Integration тест привязки Telegram
 
 ---
@@ -211,7 +255,7 @@
 - [ ] Логика архивации при закрытии задачи / завершении заказа
 
 **Application**
-- [ ] Use case: `ArchiveOrder`, `ArchiveTask`
+- [ ] Use cases: `archive_order`, `archive_task`
 - [ ] Use cases отчётов: фильтрация, поиск
 
 **Presentation**
