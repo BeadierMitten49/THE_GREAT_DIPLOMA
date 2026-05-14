@@ -64,5 +64,10 @@ username / id        ← полностью привязан
 | Infrastructure (repos) | `src/infrastructure/db/repositories/auth.py` | `UserRepository`, `UserCredentialRepository`, `RefreshTokenRepository`, `AuthLogRepository` |
 | Infrastructure (security) | `src/infrastructure/security/password_hasher.py` | `BcryptPasswordHasher` |
 | Infrastructure (security) | `src/infrastructure/security/jwt_service.py` | `JWTService` |
+| Presentation (schemas) | `src/presentation/api/v1/auth/schemas.py` | `LoginRequest`, `RefreshRequest`, `TokenResponse`, `CreateUserRequest`, `UpdateUserRequest`, `SetRolesRequest`, `BindTelegramRequest`, `ResetPasswordRequest`, `UserResponse` |
+| Presentation (service) | `src/presentation/api/v1/auth/service.py` | `AuthService`, `UserService` |
+| Presentation (dependencies) | `src/presentation/api/v1/auth/dependencies.py` | `get_current_user`, `require_role`, `get_auth_service`, `get_user_service` |
+| Presentation (router) | `src/presentation/api/v1/auth/auth.py` | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` |
+| Presentation (router) | `src/presentation/api/v1/auth/users.py` | `GET /users`, `GET /users/{id}`, `POST /users`, `PATCH /users/{id}`, `POST /users/{id}/roles`, `POST /users/{id}/deactivate`, `POST /users/{id}/activate`, `POST /users/{id}/bind-telegram`, `POST /users/{id}/reset-password` |
 
 ## DB tables: `users`, `user_credentials`, `user_roles`, `auth_log`, `refresh_tokens`
