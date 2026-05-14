@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from src.domain.auth.entities import User
-from src.domain.auth.value_objects import Role
-from src.presentation.api.v1.auth.dependencies import get_user_service, require_role
+from src.presentation.api.v1.auth.dependencies import get_user_service
 from src.presentation.api.v1.auth.schemas import (
     BindTelegramRequest,
     CreateUserRequest,
@@ -12,10 +11,9 @@ from src.presentation.api.v1.auth.schemas import (
     UserResponse,
 )
 from src.presentation.api.v1.auth.service import UserService
+from src.presentation.api.v1.dependencies import director_only
 
-router = APIRouter(prefix="/users", tags=["Users"])
-
-_director = Depends(require_role(Role.director))
+router = APIRouter(prefix="/users", tags=["Users"], dependencies=[director_only])
 
 
 def _to_response(user: User) -> UserResponse:
@@ -30,7 +28,7 @@ def _to_response(user: User) -> UserResponse:
     )
 
 
-@router.get("", response_model=list[UserResponse], dependencies=[_director])
+@router.get("", response_model=list[UserResponse])
 async def get_users(
     include_inactive: bool = False,
     service: UserService = Depends(get_user_service),
@@ -38,12 +36,12 @@ async def get_users(
     return [_to_response(u) for u in await service.get_all(include_inactive)]
 
 
-@router.get("/{id}", response_model=UserResponse, dependencies=[_director])
+@router.get("/{id}", response_model=UserResponse)
 async def get_user(id: int, service: UserService = Depends(get_user_service)):
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[_director])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_user(
     body: CreateUserRequest,
     service: UserService = Depends(get_user_service),
@@ -52,7 +50,7 @@ async def create_user(
     return {"id": user_id}
 
 
-@router.patch("/{id}", response_model=UserResponse, dependencies=[_director])
+@router.patch("/{id}", response_model=UserResponse)
 async def update_user(
     id: int,
     body: UpdateUserRequest,
@@ -62,7 +60,7 @@ async def update_user(
     return _to_response(await service.get(id))
 
 
-@router.post("/{id}/roles", status_code=status.HTTP_204_NO_CONTENT, dependencies=[_director])
+@router.post("/{id}/roles", status_code=status.HTTP_204_NO_CONTENT)
 async def set_roles(
     id: int,
     body: SetRolesRequest,
@@ -71,17 +69,17 @@ async def set_roles(
     await service.set_roles(id, body.roles)
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[_director])
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_user(id: int, service: UserService = Depends(get_user_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[_director])
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
 async def activate_user(id: int, service: UserService = Depends(get_user_service)):
     await service.activate(id)
 
 
-@router.post("/{id}/bind-telegram", status_code=status.HTTP_204_NO_CONTENT, dependencies=[_director])
+@router.post("/{id}/bind-telegram", status_code=status.HTTP_204_NO_CONTENT)
 async def bind_telegram(
     id: int,
     body: BindTelegramRequest,
@@ -90,7 +88,7 @@ async def bind_telegram(
     await service.bind_telegram(id, body.telegram_username)
 
 
-@router.post("/{id}/reset-password", status_code=status.HTTP_204_NO_CONTENT, dependencies=[_director])
+@router.post("/{id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
 async def reset_password(
     id: int,
     body: ResetPasswordRequest,
