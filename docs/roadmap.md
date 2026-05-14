@@ -17,11 +17,11 @@
 > Ветка: `feature/references`
 
 **Domain**
-- [ ] `customers` — entity, value objects
-- [ ] `products` — entity (units_per_box, shelf_life_days, critical_stock)
-- [ ] `raw_materials_catalog` — entity
-- [ ] `packaging_catalog` — entity
-- [ ] `recipes` — entity (consumption_per_unit, waste_percentage)
+- [x] `customers` — entity, value objects
+- [x] `products` — entity (units_per_box, shelf_life_days, critical_stock)
+- [x] `raw_materials_catalog` — entity
+- [x] `packaging_catalog` — entity
+- [x] `recipes` — entity (consumption_per_unit, waste_percentage)
 
 **Infrastructure**
 - [ ] SQLAlchemy модели для всех справочников
@@ -36,7 +36,7 @@
 - [ ] Pydantic схемы
 
 **Tests**
-- [ ] Unit тесты domain
+- [x] Unit тесты domain
 - [ ] Integration тесты репозиториев
 
 ---

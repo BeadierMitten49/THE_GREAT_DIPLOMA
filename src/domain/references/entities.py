@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
 
@@ -10,6 +11,12 @@ class RecipeLine:
     consumption_per_unit: Decimal
     waste_percentage: Decimal  # 0..100
     id: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.consumption_per_unit <= 0:
+            raise InvalidFieldError("consumption_per_unit", "must be greater than zero")
+        if not (Decimal(0) <= self.waste_percentage <= Decimal(100)):
+            raise InvalidFieldError("waste_percentage", "must be between 0 and 100")
 
 
 def _require_positive_int(value: int, field_name: str) -> None:
@@ -77,12 +84,7 @@ class Product:
         self.shelf_life_days = shelf_life_days
         self.critical_stock = critical_stock
 
-    def set_recipe(self, lines: list[RecipeLine]) -> None:
-        for line in lines:
-            if line.consumption_per_unit <= 0:
-                raise InvalidFieldError("consumption_per_unit", "must be greater than zero")
-            if not (Decimal(0) <= line.waste_percentage <= Decimal(100)):
-                raise InvalidFieldError("waste_percentage", "must be between 0 and 100")
+    def set_recipe(self, lines: Iterable[RecipeLine]) -> None:
         self.recipe = list(lines)
 
     def deactivate(self) -> None:
