@@ -1,11 +1,12 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.application.ports.auth import IUserCredentialRepository
 from src.domain.auth.entities import User
 from src.domain.auth.interfaces import IUserRepository
 from src.domain.auth.value_objects import Role
-from src.infrastructure.db.models.auth import UserModel, UserRoleModel
+from src.infrastructure.db.models.auth import UserCredentialModel, UserModel, UserRoleModel
 from src.infrastructure.db.repositories.base import BaseRepository
 
 
@@ -93,4 +94,25 @@ class UserRepository(BaseRepository[User, UserModel], IUserRepository):
         for role in to_add:
             self._session.add(UserRoleModel(user_id=user_id, role=role))
 
+        await self._session.flush()
+
+
+class UserCredentialRepository(IUserCredentialRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_hashed_password(self, user_id: int) -> str | None:
+        model = await self._session.get(UserCredentialModel, user_id)
+        return model.hashed_password if model else None
+
+    async def save(self, user_id: int, hashed_password: str) -> None:
+        self._session.add(UserCredentialModel(user_id=user_id, hashed_password=hashed_password))
+        await self._session.flush()
+
+    async def update_password(self, user_id: int, hashed_password: str) -> None:
+        await self._session.execute(
+            update(UserCredentialModel)
+            .where(UserCredentialModel.user_id == user_id)
+            .values(hashed_password=hashed_password)
+        )
         await self._session.flush()
