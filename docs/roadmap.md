@@ -92,7 +92,7 @@ class CustomerService:
 **Presentation**
 - [x] `AuthService`, `UserService`
 - [x] `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
-- [ ] Эндпоинты управления пользователями (только директор)
+- [x] Эндпоинты управления пользователями (только директор)
 - [x] `dependencies.py` — `get_current_user`, `require_role(...)`
 
 **Tests**
