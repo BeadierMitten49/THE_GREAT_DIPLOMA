@@ -75,8 +75,8 @@ class CustomerService:
 > Ветка: `feature/auth`
 
 **Domain**
-- [ ] `User` entity, `Role` value object
-- [ ] `IUserRepository` интерфейс
+- [x] `User` entity, `Role` value object
+- [x] `IUserRepository` интерфейс
 
 **Infrastructure**
 - [ ] SQLAlchemy модели: `users`, `user_roles`, `auth_log`, `refresh_tokens`
@@ -96,7 +96,7 @@ class CustomerService:
 - [ ] `dependencies.py` — `get_current_user`, `require_role(...)`
 
 **Tests**
-- [ ] Unit тесты domain
+- [x] Unit тесты domain
 - [ ] Unit тесты use cases
 - [ ] Integration тесты репозиториев
 - [ ] Integration тесты API: login, refresh, блокировка
