@@ -24,20 +24,20 @@
 - [x] `recipes` — entity (consumption_per_unit, waste_percentage)
 
 **Infrastructure**
-- [ ] SQLAlchemy модели для всех справочников
-- [ ] Репозитории (CRUD + деактивация)
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели для всех справочников
+- [x] Репозитории (CRUD + деактивация)
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: создание, редактирование, деактивация записей справочников
+- [x] Use cases: создание, редактирование, деактивация записей справочников
 
 **Presentation**
-- [ ] CRUD эндпоинты для каждого справочника
-- [ ] Pydantic схемы
+- [x] CRUD эндпоинты для каждого справочника
+- [x] Pydantic схемы
 
 **Tests**
 - [x] Unit тесты domain
-- [ ] Integration тесты репозиториев
+- [x] Integration тесты репозиториев
 
 ---
 
