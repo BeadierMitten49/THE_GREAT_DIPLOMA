@@ -31,7 +31,7 @@ infrastructure → domain
 
 **`infrastructure/`** — реализует интерфейсы из `domain/` и `application/ports/`. Здесь живут SQLAlchemy-модели, репозитории, Telegram-клиент.
 
-**`presentation/`** — FastAPI-роутеры и Streamlit-страницы. Вызывают только use cases из `application/`, никогда не лезут в репозитории напрямую.
+**`presentation/`** — FastAPI-роутеры и Streamlit-страницы. Роутеры вызывают только **service-классы** (живут в `presentation/`), которые инкапсулируют создание репозитория и вызов use cases. Никогда не лезут в репозитории и use cases напрямую из роутера.
 
 Нарушение этих правил — архитектурная ошибка, исправляй сразу.
 
@@ -69,9 +69,11 @@ infrastructure → domain
 
 **Бизнес-логика** — в `domain/` или `application/`, никогда в роутерах.
 
-**Роутеры** — только: принять запрос → вызвать use case → вернуть ответ. Без логики.
+**Роутеры** — только: принять запрос → вызвать метод service-класса → вернуть ответ. Без логики.
 
-**Репозитории** — интерфейс в `domain/`, реализация в `infrastructure/db/repositories/`. Роутеры и use cases работают только с интерфейсом.
+**Service-классы** (`presentation/api/v1/<module>/service.py`) — фасад между роутером и application-слоем. Принимают `AsyncSession`, сами создают конкретный репозиторий, вызывают use cases. Это единственное место где конкретный репозиторий создаётся в presentation-слое.
+
+**Репозитории** — интерфейс в `domain/`, реализация в `infrastructure/db/repositories/`. Use cases работают только с интерфейсом. Service-классы создают конкретную реализацию и передают её в use case.
 
 **Уведомления** — только через `INotificationService` из `application/ports/`. Прямых вызовов Telegram из бизнес-логики нет.
 

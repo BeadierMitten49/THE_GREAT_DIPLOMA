@@ -25,7 +25,7 @@ tags: [system, web-app, diploma, food-production]
 
 - **Тип**: веб-приложение (браузерный клиент)
 - **Доступ**: через браузер по сети предприятия и/или интернет
-- **Стек**: open-source, выбирается командой (бюджет на лицензии отсутствует)
+- **Стек**: FastAPI + SQLAlchemy (async) + PostgreSQL + Alembic (open-source)
 - **Развёртывание**: локальный сервер заказчика или VPS
 - **Интеграция**: только [[telegram-notifications|Telegram Bot API]]
 
