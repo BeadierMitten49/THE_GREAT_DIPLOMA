@@ -10,59 +10,74 @@ yarko/
 │   │
 │   ├── domain/                        ← Чистая бизнес-логика. Нет зависимостей на фреймворки.
 │   │   │
+│   │   ├── references/                ← ✅ реализован
+│   │   │   ├── entities.py            ← Customer, Product, RecipeLine, RawMaterialCatalog, PackagingCatalog
+│   │   │   ├── interfaces.py          ← ICustomerRepository, IProductRepository, ...
+│   │   │   └── exceptions.py         ← InvalidFieldError, DomainError
+│   │   │
 │   │   ├── orders/
 │   │   │   ├── entities.py            ← Order, OrderItem
 │   │   │   ├── value_objects.py       ← OrderStatus
 │   │   │   ├── services.py            ← доменные сервисы (проверка остатков при создании)
-│   │   │   └── repository.py          ← интерфейс IOrderRepository
+│   │   │   └── interfaces.py
 │   │   │
 │   │   ├── production/
 │   │   │   ├── entities.py            ← ProductionTask, TaskReport
 │   │   │   ├── value_objects.py       ← TaskStatus, RawMaterialConsumption
 │   │   │   ├── services.py            ← расчёт потребности в сырье по рецептуре
-│   │   │   └── repository.py
+│   │   │   └── interfaces.py
 │   │   │
 │   │   ├── warehouse/
 │   │   │   ├── entities.py            ← RawMaterial, Packaging, FinishedGoods, Batch
 │   │   │   ├── value_objects.py       ← StockReservation, BatchNumber
 │   │   │   ├── services.py            ← проверка критического остатка
-│   │   │   └── repository.py
+│   │   │   └── interfaces.py
 │   │   │
 │   │   ├── delivery/
 │   │   │   ├── entities.py            ← Delivery
 │   │   │   ├── value_objects.py       ← DeliveryStatus
-│   │   │   └── repository.py
+│   │   │   └── interfaces.py
 │   │   │
 │   │   ├── users/
 │   │   │   ├── entities.py            ← User, Role
 │   │   │   ├── value_objects.py       ← TelegramBinding
-│   │   │   └── repository.py
+│   │   │   └── interfaces.py
 │   │   │
 │   │   └── shared/                    ← Общие примитивы домена
-│   │       ├── value_objects.py       ← Money, Quantity, DateRange
+│   │       ├── repository.py          ← IRepository[T] — generic base interface
 │   │       └── events.py              ← доменные события (TaskCompleted и т.д.)
 │   │
 │   ├── application/                   ← Use cases. Оркестрирует домен. Не знает о HTTP/БД.
 │   │   │
+│   │   ├── references/                ← ✅ реализован
+│   │   │   ├── use_cases.py           ← чистые async-функции: get_customer, create_customer, ...
+│   │   │   ├── dto.py                 ← frozen dataclasses: CreateCustomerDTO, UpdateCustomerDTO, ...
+│   │   │   └── exceptions.py         ← NotFoundError, AlreadyExistsError
+│   │   │
 │   │   ├── orders/
-│   │   │   ├── use_cases.py           ← CreateOrder, ChangeOrderStatus, DeleteOrder
-│   │   │   └── dto.py
+│   │   │   ├── use_cases.py           ← create_order, change_order_status, ...
+│   │   │   ├── dto.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   ├── production/
-│   │   │   ├── use_cases.py           ← CreateTask, StartTask, StopTask, CompleteTask, CloseTask
-│   │   │   └── dto.py
+│   │   │   ├── use_cases.py           ← create_task, start_task, stop_task, complete_task, close_task
+│   │   │   ├── dto.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   ├── warehouse/
-│   │   │   ├── use_cases.py           ← StockArrival, WriteOff, Reserve, Release, Ship
-│   │   │   └── dto.py
+│   │   │   ├── use_cases.py           ← stock_arrival, write_off, reserve, release, ship
+│   │   │   ├── dto.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   ├── delivery/
-│   │   │   ├── use_cases.py           ← StartDelivery, CompleteDelivery, CancelDelivery
-│   │   │   └── dto.py
+│   │   │   ├── use_cases.py           ← start_delivery, complete_delivery, cancel_delivery
+│   │   │   ├── dto.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   ├── users/
-│   │   │   ├── use_cases.py           ← CreateUser, DeactivateUser, ResetPassword, BindTelegram
-│   │   │   └── dto.py
+│   │   │   ├── use_cases.py           ← create_user, deactivate_user, reset_password, bind_telegram
+│   │   │   ├── dto.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   └── ports/                     ← Интерфейсы для внешних сервисов
 │   │       └── notification_port.py   ← INotificationService (реализация — в infrastructure)
@@ -71,6 +86,8 @@ yarko/
 │   │   │
 │   │   ├── db/
 │   │   │   ├── models/                ← SQLAlchemy-модели (ORM)
+│   │   │   │   ├── __init__.py        ← Annotated-типы: intpk, str_nn, bool_active
+│   │   │   │   ├── references.py      ← ✅ CustomerModel, ProductModel, RecipeLineModel, ...
 │   │   │   │   ├── order.py
 │   │   │   │   ├── production.py
 │   │   │   │   ├── warehouse.py
@@ -78,6 +95,8 @@ yarko/
 │   │   │   │   ├── user.py
 │   │   │   │   └── auth_log.py        ← лог попыток входа (SRS §4.1.1)
 │   │   │   ├── repositories/          ← реализации IXxxRepository
+│   │   │   │   ├── base.py            ← BaseCatalogRepository[TEntity, TModel]
+│   │   │   │   ├── references.py      ← ✅ CustomerRepository, ProductRepository, ...
 │   │   │   │   ├── order_repo.py
 │   │   │   │   ├── production_repo.py
 │   │   │   │   ├── warehouse_repo.py
@@ -94,32 +113,42 @@ yarko/
 │   │
 │   └── presentation/                  ← Точки входа. Зависит только на application/.
 │       │
-│       ├── api/                       ← FastAPI
-│       │   ├── v1/
-│       │   │   ├── auth.py
-│       │   │   ├── orders.py
-│       │   │   ├── production.py
-│       │   │   ├── warehouse.py
-│       │   │   ├── delivery.py
-│       │   │   └── settings.py
-│       │   ├── schemas/               ← Pydantic request/response схемы
-│       │   └── dependencies.py        ← get_current_user, require_role(...)
+│       ├── api/
+│       │   ├── exception_handlers.py  ← глобальный маппинг исключений → HTTP-статусы
+│       │   └── v1/
+│       │       ├── __init__.py        ← корневой APIRouter
+│       │       ├── references/        ← ✅ реализован
+│       │       │   ├── __init__.py    ← router с prefix /references
+│       │       │   ├── customers.py   ← роутер /customers
+│       │       │   ├── products.py    ← роутер /products
+│       │       │   ├── raw_materials.py
+│       │       │   ├── packaging.py
+│       │       │   ├── service.py     ← CustomerService, ProductService, ... (фасад над use cases)
+│       │       │   ├── schemas.py     ← Pydantic request/response схемы
+│       │       │   └── dependencies.py← get_customer_service, ...
+│       │       ├── auth/
+│       │       ├── orders/
+│       │       └── ...
 │       │
 │       └── streamlit/                 ← Прототип UI для демонстрации
 │           ├── app.py
 │           └── pages/
 │
 ├── tests/
-│   ├── unit/                          ← тесты домена (без БД)
-│   └── integration/                   ← тесты с реальной БД
+│   ├── conftest.py                    ← регистрация маркеров: unit, integration, smoke
+│   ├── unit/
+│   │   ├── domain/                    ← тесты сущностей (без БД, без фреймворков)
+│   │   └── application/               ← тесты use cases (fake-репозитории в памяти)
+│   └── integration/
+│       ├── db/repositories/           ← тесты репозиториев (SQLite aiosqlite, savepoint-rollback)
+│       └── api/                       ← тесты API (httpx.AsyncClient + dependency_overrides)
 │
 ├── logs/                              ← gitignored
 ├── docs/
-│   └── project-structure.md
 ├── wiki/
 │   └── entities/                      ← в git; остальное gitignored
 │
-├── main.py                            ← точка входа FastAPI
+├── main.py                            ← точка входа: собирает app, подключает роутеры и handlers
 ├── .env.example
 ├── .gitignore
 └── docker-compose.yml
@@ -132,13 +161,65 @@ presentation → application → domain
 infrastructure → domain (реализует интерфейсы)
 ```
 
-`domain/` не импортирует ничего кроме `shared/`. `application/` не знает о SQLAlchemy и FastAPI. `presentation/` не лезет в репозитории напрямую — только через use cases.
+`domain/` не импортирует ничего кроме `shared/`. `application/` не знает о SQLAlchemy и FastAPI. `presentation/` не лезет в репозитории напрямую — только через сервисы.
 
 ## Ключевые решения
 
-**`ports/notification_port.py`** — application-слой знает только об интерфейсе `INotificationService`. Telegram — деталь инфраструктуры. Завтра можно заменить на email без касания бизнес-логики.
+### Application layer: функции, не классы
 
-**`domain/shared/events.py`** — доменные события (`TaskCompleted`, `StockCritical`, `OrderShipped`) — через них уведомления запускаются без прямых вызовов из домена в инфраструктуру.
+Use cases реализованы как чистые `async`-функции. Репозитории передаются явно как аргументы:
+
+```python
+async def create_customer(dto: CreateCustomerDTO, repo: ICustomerRepository) -> int:
+    ...
+```
+
+Не используются классы-обёртки (`class CreateCustomerUseCase`). Причины:
+- Нет скрытого состояния — всё видно из сигнатуры
+- Легко тестировать: просто передай fake-репозиторий
+- Легко комбинировать: один use case может вызвать другой без создания объектов
+
+DTO — frozen dataclasses (не Pydantic). Application-слой не зависит на Pydantic.
+
+### Presentation: service-класс как фасад
+
+Роутер не знает про репозитории и DTO. Вместо этого — service-класс на каждый агрегат:
+
+```python
+class CustomerService:
+    def __init__(self, session: AsyncSession) -> None:
+        self._repo = CustomerRepository(session)  # создаёт репо сам
+
+    async def create(self, name: str, default_address: str) -> int:
+        return await create_customer(CreateCustomerDTO(name, default_address), self._repo)
+```
+
+Роутер видит только `service.create(name, address)` — без DTO, без репозиториев. Причины:
+- Роутер отвечает только за HTTP: принять запрос → вызвать → вернуть ответ
+- Смена репозитория или DTO не затрагивает роутер
+- Сервис можно переиспользовать из разных роутеров или Streamlit
+
+### Exception handlers: единое место в presentation
+
+Маппинг исключений → HTTP-статусы живёт в `presentation/api/exception_handlers.py`, регистрируется в `main.py` одной строкой:
+
+```
+NotFoundError      → 404
+AlreadyExistsError → 409
+InvalidFieldError  → 422
+```
+
+Не в роутерах (дублирование по всем ручкам) и не в `main.py` напрямую (не его ответственность). Новые исключения будущих модулей добавляются в тот же файл.
+
+### Infrastructure: generic base repository
+
+`BaseCatalogRepository[TEntity, TModel]` реализует общую логику `get_by_id`, `get_all`, `save`, `exists_by_name`. Конкретный репозиторий определяет только `_model_class`, `_to_entity`, `_to_values`. Это устраняет дублирование без нарушения DDD: интерфейс остаётся в `domain/`, реализация в `infrastructure/`.
+
+### Прочее
+
+**`IRepository[T]`** в `domain/shared/` — generic base interface (Python 3.12+, без `TypeVar`). Все репозитории наследуются от него.
+
+**`ports/notification_port.py`** — application-слой знает только об интерфейсе `INotificationService`. Telegram — деталь инфраструктуры.
 
 **`auth_log`** — таблица в БД, не файл. Нужна для отчётности и фильтрации через интерфейс.
 

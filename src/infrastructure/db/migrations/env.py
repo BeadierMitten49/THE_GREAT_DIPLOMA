@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from src.infrastructure.config import settings
 from src.infrastructure.db.models import Base
+from src.infrastructure.db.models import references  # noqa: F401 — register models with Base
 
 config = context.config
 if config.config_file_name is not None:
