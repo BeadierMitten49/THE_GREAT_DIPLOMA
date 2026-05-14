@@ -44,3 +44,12 @@ class BaseRepository[TEntity, TModel](ABC):
                 .values(**values)
             )
             return entity.id
+
+
+class BaseCatalogRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
+    async def exists_by_name(self, name: str, exclude_id: int | None = None) -> bool:
+        stmt = select(self._model_class.id).where(self._model_class.name == name)
+        if exclude_id is not None:
+            stmt = stmt.where(self._model_class.id != exclude_id)
+        result = await self._session.execute(stmt)
+        return result.scalar() is not None
