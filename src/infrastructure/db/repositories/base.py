@@ -57,7 +57,7 @@ class BaseCatalogRepository[TEntity, TModel](BaseSoftDeleteRepository[TEntity, T
         return result.scalar() is not None
 
 
-class BaseStockRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
+class BasePlainRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
     async def get_all(self) -> list[TEntity]:
         result = await self._session.execute(select(self._model_class))
         return [self._to_entity(row) for row in result.scalars().all()]

@@ -13,11 +13,11 @@ from src.infrastructure.db.models.warehouse import (
     ProductStockModel,
     RawMaterialStockModel,
 )
-from src.infrastructure.db.repositories.base import BaseStockRepository
+from src.infrastructure.db.repositories.base import BasePlainRepository
 
 
 class RawMaterialStockRepository(
-    BaseStockRepository[RawMaterialStock, RawMaterialStockModel],
+    BasePlainRepository[RawMaterialStock, RawMaterialStockModel],
     IRawMaterialStockRepository,
 ):
     @property
@@ -52,7 +52,7 @@ class RawMaterialStockRepository(
 
 
 class PackagingStockRepository(
-    BaseStockRepository[PackagingStock, PackagingStockModel],
+    BasePlainRepository[PackagingStock, PackagingStockModel],
     IPackagingStockRepository,
 ):
     @property
@@ -83,7 +83,7 @@ class PackagingStockRepository(
 
 
 class ProductStockRepository(
-    BaseStockRepository[ProductStock, ProductStockModel],
+    BasePlainRepository[ProductStock, ProductStockModel],
     IProductStockRepository,
 ):
     @property
