@@ -107,11 +107,13 @@ class CustomerService:
 > Ветка: `feature/warehouse`
 
 **Domain**
-- [ ] `RawMaterialStock` entity
-- [ ] `PackagingStock` entity
-- [ ] `ProductsStock` entity (batch_number, batch_year)
-- [ ] `StockReservation` value object
-- [ ] Domain service: проверка критического остатка
+- [ ] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
+- [ ] `PackagingStock` entity (quantity: int, write_off)
+- [ ] `ProductStock` entity (quantity: int, batch_number, batch_year, expiry_date, write_off)
+- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity)
+- [ ] `ProductReservation` entity (stock_id, order_id, quantity)
+- [ ] `IRawMaterialStockRepository`, `IPackagingStockRepository`, `IProductStockRepository`
+- [ ] `IRawMaterialReservationRepository`, `IProductReservationRepository`
 
 **Infrastructure**
 - [ ] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`, `raw_material_reservations`, `products_reservations`
@@ -129,7 +131,7 @@ class CustomerService:
 - [ ] Эндпоинты отгрузок (список заказов в статусе «Сборка», кнопка «Выдано»)
 
 **Tests**
-- [ ] Unit тесты domain: резервирование, критический остаток, batch_number reset
+- [ ] Unit тесты domain: write_off (граничные случаи), batch_number
 - [ ] Unit тесты use cases
 - [ ] Integration тесты репозиториев
 - [ ] Integration тесты API
