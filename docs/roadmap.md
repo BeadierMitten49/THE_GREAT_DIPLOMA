@@ -121,9 +121,9 @@ class CustomerService:
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases сырья: `raw_material_arrival`, `raw_material_write_off`, `reserve_raw_material`, `release_raw_material_reservation`
-- [ ] Use cases упаковки: `packaging_arrival`, `packaging_write_off`
-- [ ] Use cases продукции: `finished_goods_arrival`, `reserve_finished_goods`, `release_finished_goods_reservation`, `ship_finished_goods`
+- [ ] Use cases сырья: `raw_material_stock_arrival`, `raw_material_stock_write_off`, `reserve_raw_material_stock`, `release_raw_material_stock`
+- [ ] Use cases упаковки: `packaging_stock_arrival`, `packaging_stock_write_off`
+- [ ] Use cases продукции: `product_stock_arrival`, `reserve_product_stock`, `release_product_stock`, `ship_product_stock`
 
 **Presentation**
 - [ ] Service-классы по агрегатам
