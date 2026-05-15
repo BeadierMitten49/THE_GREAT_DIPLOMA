@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from src.domain.shared.exceptions import InvalidFieldError
@@ -54,21 +54,3 @@ class ProductStock:
         if amount > self.quantity:
             raise InvalidFieldError("amount", "exceeds available quantity")
         self.quantity -= amount
-
-
-@dataclass
-class RawMaterialReservation:
-    stock_id: int
-    task_id: int
-    quantity: Decimal
-    id: int | None = None
-    created_at: datetime | None = None
-
-
-@dataclass
-class ProductReservation:
-    stock_id: int
-    order_id: int
-    quantity: int
-    id: int | None = None
-    created_at: datetime | None = None

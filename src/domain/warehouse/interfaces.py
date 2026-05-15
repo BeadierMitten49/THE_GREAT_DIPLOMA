@@ -1,12 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.domain.warehouse.entities import (
-    PackagingStock,
-    ProductReservation,
-    ProductStock,
-    RawMaterialReservation,
-    RawMaterialStock,
-)
+from src.domain.warehouse.entities import PackagingStock, ProductStock, RawMaterialStock
 
 
 class IRawMaterialStockRepository(ABC):
@@ -52,31 +46,3 @@ class IProductStockRepository(ABC):
 
     @abstractmethod
     async def save(self, entity: ProductStock) -> int: ...
-
-
-class IRawMaterialReservationRepository(ABC):
-    @abstractmethod
-    async def save(self, entity: RawMaterialReservation) -> int: ...
-
-    @abstractmethod
-    async def get_by_task(self, task_id: int) -> list[RawMaterialReservation]: ...
-
-    @abstractmethod
-    async def get_by_stock(self, stock_id: int) -> list[RawMaterialReservation]: ...
-
-    @abstractmethod
-    async def release_by_task(self, task_id: int) -> None: ...
-
-
-class IProductReservationRepository(ABC):
-    @abstractmethod
-    async def save(self, entity: ProductReservation) -> int: ...
-
-    @abstractmethod
-    async def get_by_order(self, order_id: int) -> list[ProductReservation]: ...
-
-    @abstractmethod
-    async def get_by_stock(self, stock_id: int) -> list[ProductReservation]: ...
-
-    @abstractmethod
-    async def release_by_order(self, order_id: int) -> None: ...

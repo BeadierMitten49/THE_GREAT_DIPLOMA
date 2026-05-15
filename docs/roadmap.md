@@ -110,20 +110,22 @@ class CustomerService:
 - [ ] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
 - [ ] `PackagingStock` entity (quantity: int, write_off)
 - [ ] `ProductStock` entity (quantity: int, batch_number, batch_year, expiry_date, write_off)
-- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity)
-- [ ] `ProductReservation` entity (stock_id, order_id, quantity)
 - [ ] `IRawMaterialStockRepository`, `IPackagingStockRepository`, `IProductStockRepository`
-- [ ] `IRawMaterialReservationRepository`, `IProductReservationRepository`
+
+> `RawMaterialReservation` → `domain/production`, `ProductReservation` → `domain/orders`
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`, `raw_material_reservations`, `products_reservations`
+- [ ] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`
 - [ ] Репозитории
 - [ ] Alembic миграция
 
 **Application**
-- [ ] Use cases сырья: `raw_material_stock_arrival`, `raw_material_stock_write_off`, `reserve_raw_material_stock`, `release_raw_material_stock`
+- [ ] Use cases сырья: `raw_material_stock_arrival`, `raw_material_stock_write_off`
 - [ ] Use cases упаковки: `packaging_stock_arrival`, `packaging_stock_write_off`
-- [ ] Use cases продукции: `product_stock_arrival`, `reserve_product_stock`, `release_product_stock`, `ship_product_stock`
+- [ ] Use cases продукции: `product_stock_arrival`, `ship_product_stock`
+
+> `reserve_raw_material_stock` / `release_raw_material_stock` → Phase 4 (production)
+> `reserve_product_stock` / `release_product_stock` → Phase 5 (orders)
 
 **Presentation**
 - [ ] Service-классы по агрегатам
@@ -145,6 +147,9 @@ class CustomerService:
 - [ ] `ProductionTask` entity, `TaskStatus` value object
 - [ ] `TaskStop` entity
 - [ ] `TaskCompletion` entity
+- [ ] `TaskCompletionConsumption` entity
+- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
+- [ ] `IRawMaterialReservationRepository`
 - [ ] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
 
 **Infrastructure**
@@ -174,8 +179,10 @@ class CustomerService:
 > Ветка: `feature/orders`
 
 **Domain**
-- [ ] `Order` entity, `OrderItem` value object, `OrderStatus` value object
-- [ ] Domain service: проверка остатков при создании заказа, логика начального статуса
+- [ ] `Order` entity, `OrderStatus` value object
+- [ ] `OrderItem` entity
+- [ ] `ProductReservation` entity (stock_id, order_id, quantity) — из warehouse
+- [ ] `IOrderRepository`, `IOrderItemRepository`, `IProductReservationRepository`
 
 **Infrastructure**
 - [ ] SQLAlchemy модели: `orders`, `order_items`
