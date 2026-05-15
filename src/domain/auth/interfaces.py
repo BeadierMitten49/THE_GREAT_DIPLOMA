@@ -1,10 +1,10 @@
 from abc import abstractmethod
 
 from src.domain.auth.entities import User
-from src.domain.shared.repository import IRepository
+from src.domain.shared.repository import ISoftDeleteRepository
 
 
-class IUserRepository(IRepository[User]):
+class IUserRepository(ISoftDeleteRepository[User]):
     @abstractmethod
     async def get_by_username(self, username: str) -> User | None: ...
 
