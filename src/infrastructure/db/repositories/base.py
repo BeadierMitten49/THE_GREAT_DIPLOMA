@@ -46,6 +46,45 @@ class BaseRepository[TEntity, TModel](ABC):
             return entity.id
 
 
+class BaseStockRepository[TEntity, TModel](ABC):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    @property
+    @abstractmethod
+    def _model_class(self) -> type[TModel]: ...
+
+    @abstractmethod
+    def _to_entity(self, model: TModel) -> TEntity: ...
+
+    @abstractmethod
+    def _to_values(self, entity: TEntity) -> dict: ...
+
+    async def get_by_id(self, id: int) -> TEntity | None:
+        model = await self._session.get(self._model_class, id)
+        return self._to_entity(model) if model else None
+
+    async def get_all(self) -> list[TEntity]:
+        result = await self._session.execute(select(self._model_class))
+        return [self._to_entity(row) for row in result.scalars().all()]
+
+    async def save(self, entity: TEntity) -> int:
+        values = self._to_values(entity)
+        if entity.id is None:
+            model = self._model_class(**values)
+            self._session.add(model)
+            await self._session.flush()
+            entity.id = model.id
+            return model.id
+        else:
+            await self._session.execute(
+                update(self._model_class)
+                .where(self._model_class.id == entity.id)
+                .values(**values)
+            )
+            return entity.id
+
+
 class BaseCatalogRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
     async def exists_by_name(self, name: str, exclude_id: int | None = None) -> bool:
         stmt = select(self._model_class.id).where(self._model_class.name == name)
