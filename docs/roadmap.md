@@ -144,8 +144,8 @@ class CustomerService:
 
 ---
 
-## Phase 4 — Production (производственные задачи)
-> Ветка: `feature/production`
+## Phase 4 — Tasks (производственные задачи)
+> Ветка: `feature/tasks`
 
 **Domain**
 - [ ] `ProductionTask` entity, `TaskStatus` value object

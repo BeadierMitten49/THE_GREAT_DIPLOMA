@@ -51,7 +51,7 @@ infrastructure → domain
 
 Типы: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `wip`
 
-Модули: `auth`, `orders`, `production`, `warehouse`, `delivery`, `notifications`, `reports`, `dashboard`, `references`, `shared`
+Модули: `auth`, `orders`, `tasks`, `warehouse`, `delivery`, `notifications`, `reports`, `dashboard`, `references`, `shared`
 
 ---
 
@@ -77,8 +77,6 @@ infrastructure → domain
 
 **Уведомления** — только через `INotificationService` из `application/ports/`. Прямых вызовов Telegram из бизнес-логики нет.
 
-**Удаление** — везде soft delete (`is_deleted = True`). Физического удаления записей нет.
-
 **Логи авторизации** — таблица `auth_log` в БД, не файл.
 
 **Сессии** — долгоживущий refresh token, без автовыхода по таймауту.
@@ -88,7 +86,7 @@ infrastructure → domain
 ## Порядок разработки модулей
 
 ```
-references → auth → warehouse → production → orders → delivery → notifications → reports → dashboard
+references → auth → warehouse → tasks → orders → delivery → notifications → reports → dashboard
 ```
 
 Не начинай модуль если его зависимости не влиты в `develop`.

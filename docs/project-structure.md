@@ -21,7 +21,7 @@ yarko/
 │   │   │   ├── services.py            ← доменные сервисы (проверка остатков при создании)
 │   │   │   └── interfaces.py
 │   │   │
-│   │   ├── production/
+│   │   ├── tasks/
 │   │   │   ├── entities.py            ← ProductionTask, TaskReport
 │   │   │   ├── value_objects.py       ← TaskStatus, RawMaterialConsumption
 │   │   │   ├── services.py            ← расчёт потребности в сырье по рецептуре
@@ -60,7 +60,7 @@ yarko/
 │   │   │   ├── dto.py
 │   │   │   └── exceptions.py
 │   │   │
-│   │   ├── production/
+│   │   ├── tasks/
 │   │   │   ├── use_cases.py           ← create_task, start_task, stop_task, complete_task, close_task
 │   │   │   ├── dto.py
 │   │   │   └── exceptions.py
