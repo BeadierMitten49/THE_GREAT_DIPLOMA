@@ -16,6 +16,11 @@ from src.infrastructure.db.models.references import (  # noqa: F401 — register
     RawMaterialCatalogModel,
     RecipeLineModel,
 )
+from src.infrastructure.db.models.orders import (  # noqa: F401 — register models
+    OrderItemModel,
+    OrderModel,
+    ProductReservationModel,
+)
 from src.infrastructure.db.models.warehouse import (  # noqa: F401 — register models
     PackagingStockModel,
     ProductStockModel,
