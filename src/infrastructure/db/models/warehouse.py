@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import Date, ForeignKey, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,7 +14,7 @@ class RawMaterialStockModel(Base):
     raw_material_id: Mapped[int] = mapped_column(
         ForeignKey("raw_materials_catalog.id"), nullable=False
     )
-    quantity: Mapped[float] = mapped_column(Numeric(12, 3), nullable=False)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     arrival_date: Mapped[date] = mapped_column(Date, nullable=False)
     expiry_date: Mapped[date] = mapped_column(Date, nullable=False)
     comment: Mapped[str | None] = mapped_column(String, nullable=True)
