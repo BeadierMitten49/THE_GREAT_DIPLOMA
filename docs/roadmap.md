@@ -148,31 +148,31 @@ class CustomerService:
 > Ветка: `feature/orders`
 
 **Domain**
-- [ ] `Order` entity, `OrderStatus` value object
-- [ ] `OrderItem` entity
-- [ ] `ProductReservation` entity (stock_id, order_id, quantity) — из warehouse
-- [ ] `IOrderRepository`, `IOrderItemRepository`, `IProductReservationRepository`
+- [x] `Order` entity, `OrderStatus` value object
+- [x] `OrderItem` entity
+- [x] `ProductReservation` entity (stock_id, order_id, quantity)
+- [x] `IOrderRepository`, `IOrderItemRepository`, `IProductReservationRepository`
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `orders`, `order_items`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `orders`, `order_items`, `product_reservations`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: `create_order`, `change_order_status`, `edit_order`, `delete_order`
-- [ ] Логика резервирования продукции при переходе в «Сборка»
-- [ ] Аварийное снятие резерва директором
+- [x] Use cases: `create_order`, `change_order_status`, `edit_order`, `delete_order`
+- [x] Логика резервирования: `reserve_product_for_order`, `release_product_reservation`
+- [x] Аварийное снятие резерва: `release_order_reservations`
 
 **Presentation**
-- [ ] `OrderService`
-- [ ] Эндпоинты заказов
-- [ ] Эндпоинт аварийного снятия резерва
+- [x] `OrderService`
+- [x] Эндпоинты заказов (`/orders`)
+- [x] Эндпоинт аварийного снятия резерва (`DELETE /orders/{id}/reservations`)
 
 **Tests**
-- [ ] Unit тесты domain: логика начального статуса, переходы состояний
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API: полный цикл заказа
+- [x] Unit тесты domain (26): статусная машина, soft delete
+- [x] Unit тесты use cases (35)
+- [x] Integration тесты репозиториев (22)
+- [x] Integration тесты API (24)
 
 ---
 

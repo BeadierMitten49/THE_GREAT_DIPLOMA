@@ -120,7 +120,7 @@
 | delivery_user_id | FK → users | исполнитель доставки |
 | comment | str, nullable | |
 | created_at | datetime | |
-| is_deleted | bool | soft delete |
+| is_active | bool | soft delete |
 
 ### `order_items`
 | Поле | Тип | Примечание |
@@ -150,7 +150,7 @@
 | created_at | datetime | |
 | actual_start_at | datetime, nullable | |
 | actual_end_at | datetime, nullable | |
-| is_deleted | bool | soft delete |
+| is_active | bool | soft delete |
 
 ### `task_stops` (остановки задачи)
 | Поле | Тип | Примечание |
