@@ -103,8 +103,8 @@ class CustomerService:
 
 ---
 
-## Phase 3 — Warehouse (склад)
-> Ветка: `feature/warehouse`
+## Phase 3 — Warehouse (склад) ✅
+> Ветка: `feature/warehouse` → влита в `develop`
 
 **Domain**
 - [x] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
@@ -122,21 +122,25 @@ class CustomerService:
 **Application**
 - [x] Use cases сырья: `get_raw_material_stock`, `get_raw_material_stocks`, `get_raw_material_stocks_by_material`, `raw_material_stock_arrival`, `raw_material_stock_write_off`
 - [x] Use cases упаковки: `get_packaging_stock`, `get_packaging_stocks`, `get_packaging_stocks_by_packaging`, `packaging_stock_arrival`, `packaging_stock_write_off`
-- [x] Use cases продукции: `get_product_stock`, `get_product_stocks`, `get_product_stocks_by_product`, `product_stock_arrival`
+- [x] Use cases продукции: `get_product_stock`, `get_product_stocks`, `get_product_stocks_by_product`, `product_stock_arrival`, `product_stock_write_off` (ручное списание директором)
 
 > `ship_product_stock` → Phase 5 (orders, при смене статуса «Сборка → Доставка»)
 > `reserve_raw_material_stock` / `release_raw_material_stock` → Phase 4 (production)
 > `reserve_product_stock` / `release_product_stock` → Phase 5 (orders)
 
 **Presentation**
-- [ ] Service-классы по агрегатам
-- [ ] Эндпоинты склада сырья, упаковки, продукции
+- [x] Service-классы: `RawMaterialStockService`, `PackagingStockService`, `ProductStockService`
+- [x] Эндпоинты: `/raw-material-stock`, `/packaging-stock`, `/product-stock`
+- [x] RBAC: `director_or_warehouse` на всех, `director_only` на `product-stock/{id}/write-off`
+
+**Refactoring**
+- [x] `NotFoundError` вынесен в `application/shared/exceptions.py` (единый для всех модулей)
 
 **Tests**
 - [x] Unit тесты domain: write_off (граничные случаи), batch_number
-- [x] Unit тесты use cases (26)
+- [x] Unit тесты use cases (28)
 - [x] Integration тесты репозиториев (20)
-- [ ] Integration тесты API
+- [x] Integration тесты API (27)
 
 ---
 
