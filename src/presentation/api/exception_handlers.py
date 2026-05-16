@@ -1,13 +1,19 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.application.references.exceptions import AlreadyExistsError, NotFoundError
-from src.domain.references.exceptions import InvalidFieldError
+from src.application.references.exceptions import AlreadyExistsError
+from src.application.references.exceptions import NotFoundError as ReferencesNotFoundError
+from src.application.warehouse.exceptions import NotFoundError as WarehouseNotFoundError
+from src.domain.shared.exceptions import InvalidFieldError
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    @app.exception_handler(NotFoundError)
-    async def not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
+    @app.exception_handler(ReferencesNotFoundError)
+    async def references_not_found_handler(request: Request, exc: ReferencesNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(WarehouseNotFoundError)
+    async def warehouse_not_found_handler(request: Request, exc: WarehouseNotFoundError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": str(exc)})
 
     @app.exception_handler(AlreadyExistsError)
