@@ -176,38 +176,38 @@ class CustomerService:
 
 ---
 
-## Phase 5 — Tasks (производственные задачи)
-> Ветка: `feature/tasks`
+## Phase 5 — Tasks (производственные задачи) ✅
+> Ветка: `feature/tasks` → влита в `develop`
 
 **Domain**
-- [ ] `ProductionTask` entity, `TaskStatus` value object
-- [ ] `TaskStop` entity
-- [ ] `TaskCompletion` entity
-- [ ] `TaskCompletionConsumption` entity
-- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
-- [ ] `IRawMaterialReservationRepository`
-- [ ] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
+- [x] `ProductionTask` entity, `TaskStatus` value object
+- [x] `TaskStop` entity
+- [x] `TaskCompletion` entity
+- [x] `TaskCompletionConsumption` entity
+- [x] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
+- [x] `IRawMaterialReservationRepository`
+- [x] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `production_tasks`, `task_stops`, `task_completions`, `task_completion_consumption`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `production_tasks`, `task_stops`, `task_completions`, `task_completion_consumption`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: `create_task`, `start_task`, `stop_task`, `resume_task`, `complete_task`, `close_task`
-- [ ] Use cases: `reassign_task`, `delete_task`
-- [ ] Логика связи с заказом: `order_id` в задаче, проверка обеспеченности при закрытии
+- [x] Use cases: `create_task`, `start_task`, `stop_task`, `resume_task`, `complete_task`, `close_task`
+- [x] Use cases: `reassign_task`, `delete_task`
+- [x] Логика связи с заказом: `order_id` в задаче
 
 **Presentation**
-- [ ] `ProductionTaskService`
-- [ ] Эндпоинты задач (по ролям: производство видит только свои)
-- [ ] Эндпоинт завершения с формой отчёта
+- [x] `ProductionTaskService`
+- [x] Эндпоинты задач (по ролям: производство видит только свои)
+- [x] Эндпоинт завершения с формой отчёта
 
 **Tests**
-- [ ] Unit тесты domain: расчёт сырья, state machine задачи
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API
+- [x] Unit тесты domain: расчёт сырья, state machine задачи (39)
+- [x] Unit тесты use cases (38)
+- [x] Integration тесты репозиториев (21)
+- [x] Integration тесты API (29)
 
 ---
 
