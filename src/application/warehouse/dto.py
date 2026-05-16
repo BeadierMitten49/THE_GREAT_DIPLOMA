@@ -38,3 +38,9 @@ class ProductStockArrivalDTO:
     arrival_date: date
     expiry_date: date
     comment: str | None
+
+
+@dataclass(frozen=True)
+class ProductStockWriteOffDTO:
+    stock_id: int
+    amount: int
