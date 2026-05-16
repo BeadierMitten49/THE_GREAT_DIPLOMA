@@ -144,42 +144,7 @@ class CustomerService:
 
 ---
 
-## Phase 4 — Tasks (производственные задачи)
-> Ветка: `feature/tasks`
-
-**Domain**
-- [ ] `ProductionTask` entity, `TaskStatus` value object
-- [ ] `TaskStop` entity
-- [ ] `TaskCompletion` entity
-- [ ] `TaskCompletionConsumption` entity
-- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
-- [ ] `IRawMaterialReservationRepository`
-- [ ] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
-
-**Infrastructure**
-- [ ] SQLAlchemy модели: `production_tasks`, `task_stops`, `task_completions`, `task_completion_consumption`
-- [ ] Репозитории
-- [ ] Alembic миграция
-
-**Application**
-- [ ] Use cases: `create_task`, `start_task`, `stop_task`, `resume_task`, `complete_task`, `close_task`
-- [ ] Use cases: `reassign_task`, `delete_task`
-- [ ] Логика связи с заказом (order_task)
-
-**Presentation**
-- [ ] `ProductionTaskService`
-- [ ] Эндпоинты задач (по ролям: производство видит только свои)
-- [ ] Эндпоинт завершения с формой отчёта
-
-**Tests**
-- [ ] Unit тесты domain: расчёт сырья, state machine задачи
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API
-
----
-
-## Phase 5 — Orders (заказы)
+## Phase 4 — Orders (заказы)
 > Ветка: `feature/orders`
 
 **Domain**
@@ -208,6 +173,41 @@ class CustomerService:
 - [ ] Unit тесты use cases
 - [ ] Integration тесты репозиториев
 - [ ] Integration тесты API: полный цикл заказа
+
+---
+
+## Phase 5 — Tasks (производственные задачи)
+> Ветка: `feature/tasks`
+
+**Domain**
+- [ ] `ProductionTask` entity, `TaskStatus` value object
+- [ ] `TaskStop` entity
+- [ ] `TaskCompletion` entity
+- [ ] `TaskCompletionConsumption` entity
+- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
+- [ ] `IRawMaterialReservationRepository`
+- [ ] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
+
+**Infrastructure**
+- [ ] SQLAlchemy модели: `production_tasks`, `task_stops`, `task_completions`, `task_completion_consumption`
+- [ ] Репозитории
+- [ ] Alembic миграция
+
+**Application**
+- [ ] Use cases: `create_task`, `start_task`, `stop_task`, `resume_task`, `complete_task`, `close_task`
+- [ ] Use cases: `reassign_task`, `delete_task`
+- [ ] Логика связи с заказом: `order_id` в задаче, проверка обеспеченности при закрытии
+
+**Presentation**
+- [ ] `ProductionTaskService`
+- [ ] Эндпоинты задач (по ролям: производство видит только свои)
+- [ ] Эндпоинт завершения с формой отчёта
+
+**Tests**
+- [ ] Unit тесты domain: расчёт сырья, state machine задачи
+- [ ] Unit тесты use cases
+- [ ] Integration тесты репозиториев
+- [ ] Integration тесты API
 
 ---
 

@@ -86,7 +86,7 @@ infrastructure → domain
 ## Порядок разработки модулей
 
 ```
-references → auth → warehouse → tasks → orders → delivery → notifications → reports → dashboard
+references → auth → warehouse → orders → tasks → delivery → notifications → reports → dashboard
 ```
 
 Не начинай модуль если его зависимости не влиты в `develop`.

@@ -41,7 +41,7 @@
 
 ---
 
-## Phase 4 — Tasks (производственные задачи)
+## Phase 5 — Tasks (производственные задачи)
 
 | Концепт | Entity / VO | DB table | Use case prefix | API prefix |
 |---------|-------------|----------|-----------------|------------|
@@ -53,13 +53,14 @@
 
 ---
 
-## Phase 5 — Orders (заказы)
+## Phase 4 — Orders (заказы)
 
 | Концепт | Entity / VO | DB table | Use case prefix | API prefix |
 |---------|-------------|----------|-----------------|------------|
 | Заказ | `Order` | `orders` | `*_order` | `/orders` |
 | Позиция заказа | `OrderItem` | `order_items` | — | — |
 | Статус заказа | `OrderStatus` (StrEnum) | — | — | — |
+| Резерв продукции | `ProductReservation` | `product_reservations` | `reserve_product_stock` / `release_product_stock` | — |
 
 ---
 
