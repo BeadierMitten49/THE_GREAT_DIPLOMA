@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import delete, select
 
@@ -171,9 +170,9 @@ class TaskCompletionRepository(
                 id=row.id,
                 completion_id=row.completion_id,
                 raw_material_id=row.raw_material_id,
-                planned_qty=Decimal(str(row.planned_qty)),
-                actual_qty=Decimal(str(row.actual_qty)),
-                waste_qty=Decimal(str(row.waste_qty)) if row.waste_qty is not None else None,
+                planned_qty=row.planned_qty,
+                actual_qty=row.actual_qty,
+                waste_qty=row.waste_qty,
             )
             for row in result.scalars().all()
         ]
@@ -205,7 +204,7 @@ class RawMaterialReservationRepository(
             id=model.id,
             stock_id=model.stock_id,
             task_id=model.task_id,
-            quantity=Decimal(str(model.quantity)),
+            quantity=model.quantity,
             created_at=model.created_at,
         )
 

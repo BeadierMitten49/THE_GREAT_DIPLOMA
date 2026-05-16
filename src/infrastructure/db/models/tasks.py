@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -59,9 +60,9 @@ class TaskCompletionConsumptionModel(Base):
     raw_material_id: Mapped[int] = mapped_column(
         ForeignKey("raw_materials_catalog.id"), nullable=False
     )
-    planned_qty: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
-    actual_qty: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
-    waste_qty: Mapped[float | None] = mapped_column(Numeric(12, 4), nullable=True)
+    planned_qty: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
+    actual_qty: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
+    waste_qty: Mapped[Decimal | None] = mapped_column(Numeric(12, 4), nullable=True)
 
 
 class RawMaterialReservationModel(Base):
@@ -70,7 +71,7 @@ class RawMaterialReservationModel(Base):
     id: Mapped[intpk]
     stock_id: Mapped[int] = mapped_column(ForeignKey("raw_material_stock.id"), nullable=False)
     task_id: Mapped[int] = mapped_column(ForeignKey("production_tasks.id"), nullable=False)
-    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

@@ -28,7 +28,7 @@ class RawMaterialStockRepository(
         return RawMaterialStock(
             id=model.id,
             raw_material_id=model.raw_material_id,
-            quantity=Decimal(str(model.quantity)),
+            quantity=model.quantity,
             arrival_date=model.arrival_date,
             expiry_date=model.expiry_date,
             comment=model.comment,
