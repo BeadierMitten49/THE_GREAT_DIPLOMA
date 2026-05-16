@@ -26,6 +26,13 @@ from src.infrastructure.db.models.warehouse import (  # noqa: F401 — register 
     ProductStockModel,
     RawMaterialStockModel,
 )
+from src.infrastructure.db.models.tasks import (  # noqa: F401 — register models
+    ProductionTaskModel,
+    RawMaterialReservationModel,
+    TaskCompletionConsumptionModel,
+    TaskCompletionModel,
+    TaskStopModel,
+)
 
 
 @pytest.fixture(scope="session")
