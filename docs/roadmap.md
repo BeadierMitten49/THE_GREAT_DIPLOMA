@@ -71,8 +71,8 @@ class CustomerService:
 
 ---
 
-## Phase 2 — Auth
-> Ветка: `feature/auth`
+## Phase 2 — Auth ✅
+> Ветка: `feature/auth` → влита в `develop`
 
 **Domain**
 - [x] `User` entity, `Role` value object
@@ -144,8 +144,8 @@ class CustomerService:
 
 ---
 
-## Phase 4 — Orders (заказы)
-> Ветка: `feature/orders`
+## Phase 4 — Orders (заказы) ✅
+> Ветка: `feature/orders` → влита в `develop`
 
 **Domain**
 - [x] `Order` entity, `OrderStatus` value object

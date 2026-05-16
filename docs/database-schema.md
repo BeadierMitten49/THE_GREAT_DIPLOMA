@@ -51,7 +51,6 @@
 | id | PK | |
 | user_id | FK → users | |
 | token | str, unique | |
-| expires_at | datetime | |
 | created_at | datetime | |
 
 ---
@@ -138,7 +137,7 @@
 | Поле | Тип | Примечание |
 |------|-----|-----------|
 | id | PK | |
-| type | enum | order_task, stock_task |
+| task_type | enum | order_task, stock_task |
 | product_id | FK → products | |
 | quantity | int | в штуках |
 | executor_id | FK → users | роль: production |
@@ -225,7 +224,7 @@
 | quantity | decimal | |
 | created_at | datetime | |
 
-### `products_reservations` (резерв продукции под заказ)
+### `product_reservations` (резерв продукции под заказ)
 | Поле | Тип | Примечание |
 |------|-----|-----------|
 | id | PK | |

@@ -33,11 +33,11 @@
 
 | Концепт | Entity | DB table | Use case prefix | API prefix |
 |---------|--------|----------|-----------------|------------|
-| Партия сырья | `RawMaterialStock` | `raw_material_stock` | `raw_material_stock_*` | `/raw-material-stock` |
-| Остаток упаковки | `PackagingStock` | `packaging_stock` | `packaging_stock_*` | `/packaging-stock` |
-| Партия продукции | `ProductStock` | `products_stock` | `product_stock_*` | `/product-stock` |
-| Резерв сырья | `RawMaterialReservation` | `raw_material_reservations` | `reserve_raw_material_stock` / `release_raw_material_stock` | — | → **domain/production** |
-| Резерв продукции | `ProductReservation` | `products_reservations` | `reserve_product_stock` / `release_product_stock` | — | → **domain/orders** |
+| Партия сырья | `RawMaterialStock` | `raw_material_stock` | `raw_material_stock_*` | `/warehouse/raw-material-stock` |
+| Остаток упаковки | `PackagingStock` | `packaging_stock` | `packaging_stock_*` | `/warehouse/packaging-stock` |
+| Партия продукции | `ProductStock` | `products_stock` | `product_stock_*` | `/warehouse/product-stock` |
+| Резерв сырья | `RawMaterialReservation` | `raw_material_reservations` | `reserve_raw_material_stock` / `release_raw_material_stock` | — | → **domain/tasks** |
+| Резерв продукции | `ProductReservation` | `product_reservations` | `reserve_product_stock` / `release_product_stock` | — | → **domain/orders** |
 
 ---
 
