@@ -37,6 +37,9 @@ class ITaskCompletionRepository(IPlainRepository[TaskCompletion]):
     @abstractmethod
     async def get_consumptions(self, completion_id: int) -> list[TaskCompletionConsumption]: ...
 
+    @abstractmethod
+    async def save_consumption(self, consumption: TaskCompletionConsumption) -> int: ...
+
 
 class IRawMaterialReservationRepository(IPlainRepository[RawMaterialReservation]):
     @abstractmethod
