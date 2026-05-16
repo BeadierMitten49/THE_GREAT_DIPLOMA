@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from sqlalchemy import func, select
 
 from src.domain.warehouse.entities import PackagingStock, ProductStock, RawMaterialStock
