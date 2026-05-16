@@ -107,35 +107,35 @@ class CustomerService:
 > Ветка: `feature/warehouse`
 
 **Domain**
-- [ ] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
-- [ ] `PackagingStock` entity (quantity: int, write_off)
-- [ ] `ProductStock` entity (quantity: int, batch_number, batch_year, expiry_date, write_off)
-- [ ] `IRawMaterialStockRepository`, `IPackagingStockRepository`, `IProductStockRepository`
+- [x] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
+- [x] `PackagingStock` entity (quantity: int, write_off)
+- [x] `ProductStock` entity (quantity: int, batch_number, batch_year, expiry_date, write_off)
+- [x] `IRawMaterialStockRepository`, `IPackagingStockRepository`, `IProductStockRepository`
 
 > `RawMaterialReservation` → `domain/production`, `ProductReservation` → `domain/orders`
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases сырья: `raw_material_stock_arrival`, `raw_material_stock_write_off`
-- [ ] Use cases упаковки: `packaging_stock_arrival`, `packaging_stock_write_off`
-- [ ] Use cases продукции: `product_stock_arrival`, `ship_product_stock`
+- [x] Use cases сырья: `get_raw_material_stock`, `get_raw_material_stocks`, `get_raw_material_stocks_by_material`, `raw_material_stock_arrival`, `raw_material_stock_write_off`
+- [x] Use cases упаковки: `get_packaging_stock`, `get_packaging_stocks`, `get_packaging_stocks_by_packaging`, `packaging_stock_arrival`, `packaging_stock_write_off`
+- [x] Use cases продукции: `get_product_stock`, `get_product_stocks`, `get_product_stocks_by_product`, `product_stock_arrival`
 
+> `ship_product_stock` → Phase 5 (orders, при смене статуса «Сборка → Доставка»)
 > `reserve_raw_material_stock` / `release_raw_material_stock` → Phase 4 (production)
 > `reserve_product_stock` / `release_product_stock` → Phase 5 (orders)
 
 **Presentation**
 - [ ] Service-классы по агрегатам
 - [ ] Эндпоинты склада сырья, упаковки, продукции
-- [ ] Эндпоинты отгрузок (список заказов в статусе «Сборка», кнопка «Выдано»)
 
 **Tests**
-- [ ] Unit тесты domain: write_off (граничные случаи), batch_number
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
+- [x] Unit тесты domain: write_off (граничные случаи), batch_number
+- [x] Unit тесты use cases (26)
+- [x] Integration тесты репозиториев (20)
 - [ ] Integration тесты API
 
 ---
