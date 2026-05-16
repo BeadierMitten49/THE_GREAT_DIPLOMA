@@ -9,10 +9,10 @@ from src.domain.auth.entities import User
 from src.domain.auth.interfaces import IUserRepository
 from src.domain.auth.value_objects import Role
 from src.infrastructure.db.models.auth import AuthLogModel, RefreshTokenModel, UserCredentialModel, UserModel, UserRoleModel
-from src.infrastructure.db.repositories.base import BaseRepository
+from src.infrastructure.db.repositories.base import BaseSoftDeleteRepository
 
 
-class UserRepository(BaseRepository[User, UserModel], IUserRepository):
+class UserRepository(BaseSoftDeleteRepository[User, UserModel], IUserRepository):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
 

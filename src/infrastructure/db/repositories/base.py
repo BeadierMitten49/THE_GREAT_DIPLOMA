@@ -22,13 +22,6 @@ class BaseRepository[TEntity, TModel](ABC):
         model = await self._session.get(self._model_class, id)
         return self._to_entity(model) if model else None
 
-    async def get_all(self, include_inactive: bool = False) -> list[TEntity]:
-        stmt = select(self._model_class)
-        if not include_inactive:
-            stmt = stmt.where(self._model_class.is_active.is_(True))
-        result = await self._session.execute(stmt)
-        return [self._to_entity(row) for row in result.scalars().all()]
-
     async def save(self, entity: TEntity) -> int:
         values = self._to_values(entity)
         if entity.id is None:
@@ -46,10 +39,25 @@ class BaseRepository[TEntity, TModel](ABC):
             return entity.id
 
 
-class BaseCatalogRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
+class BaseSoftDeleteRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
+    async def get_all(self, include_inactive: bool = False) -> list[TEntity]:
+        stmt = select(self._model_class)
+        if not include_inactive:
+            stmt = stmt.where(self._model_class.is_active.is_(True))
+        result = await self._session.execute(stmt)
+        return [self._to_entity(row) for row in result.scalars().all()]
+
+
+class BaseCatalogRepository[TEntity, TModel](BaseSoftDeleteRepository[TEntity, TModel]):
     async def exists_by_name(self, name: str, exclude_id: int | None = None) -> bool:
         stmt = select(self._model_class.id).where(self._model_class.name == name)
         if exclude_id is not None:
             stmt = stmt.where(self._model_class.id != exclude_id)
         result = await self._session.execute(stmt)
         return result.scalar() is not None
+
+
+class BasePlainRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
+    async def get_all(self) -> list[TEntity]:
+        result = await self._session.execute(select(self._model_class))
+        return [self._to_entity(row) for row in result.scalars().all()]

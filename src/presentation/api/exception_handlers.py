@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.application.references.exceptions import AlreadyExistsError, NotFoundError
-from src.domain.references.exceptions import InvalidFieldError
+from src.application.references.exceptions import AlreadyExistsError
+from src.application.shared.exceptions import NotFoundError
+from src.domain.shared.exceptions import InvalidFieldError
 
 
 def register_exception_handlers(app: FastAPI) -> None:

@@ -103,36 +103,44 @@ class CustomerService:
 
 ---
 
-## Phase 3 — Warehouse (склад)
-> Ветка: `feature/warehouse`
+## Phase 3 — Warehouse (склад) ✅
+> Ветка: `feature/warehouse` → влита в `develop`
 
 **Domain**
-- [ ] `RawMaterialStock` entity
-- [ ] `PackagingStock` entity
-- [ ] `ProductsStock` entity (batch_number, batch_year)
-- [ ] `StockReservation` value object
-- [ ] Domain service: проверка критического остатка
+- [x] `RawMaterialStock` entity (quantity: Decimal, arrival_date, expiry_date, write_off)
+- [x] `PackagingStock` entity (quantity: int, write_off)
+- [x] `ProductStock` entity (quantity: int, batch_number, batch_year, expiry_date, write_off)
+- [x] `IRawMaterialStockRepository`, `IPackagingStockRepository`, `IProductStockRepository`
+
+> `RawMaterialReservation` → `domain/production`, `ProductReservation` → `domain/orders`
 
 **Infrastructure**
-- [ ] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`, `raw_material_reservations`, `products_reservations`
-- [ ] Репозитории
-- [ ] Alembic миграция
+- [x] SQLAlchemy модели: `raw_material_stock`, `packaging_stock`, `products_stock`
+- [x] Репозитории
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases сырья: `raw_material_arrival`, `raw_material_write_off`, `reserve_raw_material`, `release_raw_material_reservation`
-- [ ] Use cases упаковки: `packaging_arrival`, `packaging_write_off`
-- [ ] Use cases продукции: `finished_goods_arrival`, `reserve_finished_goods`, `release_finished_goods_reservation`, `ship_finished_goods`
+- [x] Use cases сырья: `get_raw_material_stock`, `get_raw_material_stocks`, `get_raw_material_stocks_by_material`, `raw_material_stock_arrival`, `raw_material_stock_write_off`
+- [x] Use cases упаковки: `get_packaging_stock`, `get_packaging_stocks`, `get_packaging_stocks_by_packaging`, `packaging_stock_arrival`, `packaging_stock_write_off`
+- [x] Use cases продукции: `get_product_stock`, `get_product_stocks`, `get_product_stocks_by_product`, `product_stock_arrival`, `product_stock_write_off` (ручное списание директором)
+
+> `ship_product_stock` → Phase 5 (orders, при смене статуса «Сборка → Доставка»)
+> `reserve_raw_material_stock` / `release_raw_material_stock` → Phase 4 (production)
+> `reserve_product_stock` / `release_product_stock` → Phase 5 (orders)
 
 **Presentation**
-- [ ] Service-классы по агрегатам
-- [ ] Эндпоинты склада сырья, упаковки, продукции
-- [ ] Эндпоинты отгрузок (список заказов в статусе «Сборка», кнопка «Выдано»)
+- [x] Service-классы: `RawMaterialStockService`, `PackagingStockService`, `ProductStockService`
+- [x] Эндпоинты: `/raw-material-stock`, `/packaging-stock`, `/product-stock`
+- [x] RBAC: `director_or_warehouse` на всех, `director_only` на `product-stock/{id}/write-off`
+
+**Refactoring**
+- [x] `NotFoundError` вынесен в `application/shared/exceptions.py` (единый для всех модулей)
 
 **Tests**
-- [ ] Unit тесты domain: резервирование, критический остаток, batch_number reset
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API
+- [x] Unit тесты domain: write_off (граничные случаи), batch_number
+- [x] Unit тесты use cases (28)
+- [x] Integration тесты репозиториев (20)
+- [x] Integration тесты API (27)
 
 ---
 
@@ -143,6 +151,9 @@ class CustomerService:
 - [ ] `ProductionTask` entity, `TaskStatus` value object
 - [ ] `TaskStop` entity
 - [ ] `TaskCompletion` entity
+- [ ] `TaskCompletionConsumption` entity
+- [ ] `RawMaterialReservation` entity (stock_id, task_id, quantity) — из warehouse
+- [ ] `IRawMaterialReservationRepository`
 - [ ] Domain service: расчёт потребности в сырье по рецептуре (с % брака)
 
 **Infrastructure**
@@ -172,8 +183,10 @@ class CustomerService:
 > Ветка: `feature/orders`
 
 **Domain**
-- [ ] `Order` entity, `OrderItem` value object, `OrderStatus` value object
-- [ ] Domain service: проверка остатков при создании заказа, логика начального статуса
+- [ ] `Order` entity, `OrderStatus` value object
+- [ ] `OrderItem` entity
+- [ ] `ProductReservation` entity (stock_id, order_id, quantity) — из warehouse
+- [ ] `IOrderRepository`, `IOrderItemRepository`, `IProductReservationRepository`
 
 **Infrastructure**
 - [ ] SQLAlchemy модели: `orders`, `order_items`
