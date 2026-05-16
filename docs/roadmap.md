@@ -164,15 +164,15 @@ class CustomerService:
 - [x] Аварийное снятие резерва: `release_order_reservations`
 
 **Presentation**
-- [ ] `OrderService`
-- [ ] Эндпоинты заказов
-- [ ] Эндпоинт аварийного снятия резерва
+- [x] `OrderService`
+- [x] Эндпоинты заказов (`/orders`)
+- [x] Эндпоинт аварийного снятия резерва (`DELETE /orders/{id}/reservations`)
 
 **Tests**
 - [x] Unit тесты domain (26): статусная машина, soft delete
 - [x] Unit тесты use cases (35)
 - [x] Integration тесты репозиториев (22)
-- [ ] Integration тесты API: полный цикл заказа
+- [x] Integration тесты API (24)
 
 ---
 
