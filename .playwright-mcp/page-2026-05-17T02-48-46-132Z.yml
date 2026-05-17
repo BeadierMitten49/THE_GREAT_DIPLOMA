@@ -1,0 +1,67 @@
+- generic [ref=e2]:
+  - generic [ref=e75]:
+    - button "keyboard_double_arrow_left" [ref=e199] [cursor=pointer]:
+      - generic [ref=e201]: keyboard_double_arrow_left
+    - list [ref=e78]:
+      - listitem [ref=e79]:
+        - link "Склад" [ref=e81] [cursor=pointer]:
+          - /url: http://localhost:8501/
+          - paragraph [ref=e84]: Склад
+      - listitem [ref=e85]:
+        - link "Задачи" [active] [ref=e87] [cursor=pointer]:
+          - /url: http://localhost:8501/tasks
+          - paragraph [ref=e90]: Задачи
+      - listitem [ref=e91]:
+        - link "Доставки" [ref=e93] [cursor=pointer]:
+          - /url: http://localhost:8501/deliveries
+          - paragraph [ref=e96]: Доставки
+      - listitem [ref=e97]:
+        - link "Справочники" [ref=e99] [cursor=pointer]:
+          - /url: http://localhost:8501/references
+          - paragraph [ref=e102]: Справочники
+      - listitem [ref=e103]:
+        - link "Заказы" [ref=e105] [cursor=pointer]:
+          - /url: http://localhost:8501/orders
+          - paragraph [ref=e108]: Заказы
+      - listitem [ref=e109]:
+        - link "Настройки" [ref=e111] [cursor=pointer]:
+          - /url: http://localhost:8501/settings
+          - paragraph [ref=e114]: Настройки
+    - generic [ref=e118]:
+      - paragraph [ref=e123]: 👤 direktor
+      - paragraph [ref=e128]: director
+      - separator [ref=e133]
+      - button "Выйти" [ref=e136] [cursor=pointer]:
+        - paragraph [ref=e140]: Выйти
+  - generic [ref=e3]:
+    - banner [ref=e16]:
+      - generic [ref=e19]:
+        - button "Deploy" [ref=e21] [cursor=pointer]:
+          - generic [ref=e23]: Deploy
+        - button "Main menu" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+    - generic [ref=e6]:
+      - heading "Производственные задачи" [level=1] [ref=e206]:
+        - text: Производственные задачи
+        - generic [ref=e207]:
+          - link "Link to heading":
+            - /url: "#proizvodstvennye-zadachi"
+            - img
+      - generic [ref=e209]:
+        - paragraph [ref=e213]: Статус
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e217]: Все
+            - combobox "Selected Все. Статус" [ref=e219]
+          - img "open" [ref=e221]
+      - alert [ref=e225]:
+        - paragraph [ref=e230]: "Ошибка 500: Internal Server Error"
+      - separator [ref=e235]
+      - heading "Создать задачу" [level=3] [ref=e240]:
+        - text: Создать задачу
+        - generic [ref=e241]:
+          - link "Link to heading":
+            - /url: "#sozdat-zadachu"
+            - img
+      - alert [ref=e244]:
+        - paragraph [ref=e249]: Для создания задачи необходимы товары и сотрудники производства.

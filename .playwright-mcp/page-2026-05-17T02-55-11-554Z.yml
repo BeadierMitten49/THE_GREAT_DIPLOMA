@@ -1,0 +1,144 @@
+- generic [ref=e2]:
+  - generic [ref=e74]:
+    - list [ref=e77]:
+      - listitem [ref=e78]:
+        - link "Склад" [ref=e80] [cursor=pointer]:
+          - /url: http://localhost:8501/
+          - paragraph [ref=e83]: Склад
+      - listitem [ref=e84]:
+        - link "Задачи" [ref=e86] [cursor=pointer]:
+          - /url: http://localhost:8501/tasks
+          - paragraph [ref=e89]: Задачи
+      - listitem [ref=e90]:
+        - link "Доставки" [ref=e92] [cursor=pointer]:
+          - /url: http://localhost:8501/deliveries
+          - paragraph [ref=e95]: Доставки
+      - listitem [ref=e96]:
+        - link "Справочники" [ref=e98] [cursor=pointer]:
+          - /url: http://localhost:8501/references
+          - paragraph [ref=e101]: Справочники
+      - listitem [ref=e102]:
+        - link "Заказы" [ref=e104] [cursor=pointer]:
+          - /url: http://localhost:8501/orders
+          - paragraph [ref=e107]: Заказы
+      - listitem [ref=e108]:
+        - link "Настройки" [active] [ref=e110] [cursor=pointer]:
+          - /url: http://localhost:8501/settings
+          - paragraph [ref=e113]: Настройки
+    - generic [ref=e117]:
+      - paragraph [ref=e122]: 👤 direktor
+      - paragraph [ref=e127]: director
+      - separator [ref=e132]
+      - button "Выйти" [ref=e135] [cursor=pointer]:
+        - paragraph [ref=e139]: Выйти
+  - generic [ref=e3]:
+    - banner [ref=e6]:
+      - generic [ref=e9]:
+        - button "Deploy" [ref=e11] [cursor=pointer]:
+          - generic [ref=e13]: Deploy
+        - button "Main menu" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+    - generic [ref=e19]:
+      - heading "Настройки" [level=1] [ref=e198]:
+        - text: Настройки
+        - generic [ref=e199]:
+          - link "Link to heading":
+            - /url: "#nastroyki"
+            - img
+      - paragraph [ref=e204]:
+        - strong [ref=e205]: "Пользователь:"
+        - text: Директор (direktor)
+      - paragraph [ref=e210]:
+        - strong [ref=e211]: "Роли:"
+        - text: director
+      - paragraph [ref=e216]:
+        - strong [ref=e217]: "Telegram:"
+        - text: не привязан
+      - separator [ref=e222]
+      - heading "Сменить пароль" [level=3] [ref=e227]:
+        - text: Сменить пароль
+        - generic [ref=e228]:
+          - link "Link to heading":
+            - /url: "#smenit-parol"
+            - img
+      - generic [ref=e231]:
+        - generic [ref=e233]:
+          - paragraph [ref=e237]: Текущий пароль
+          - generic [ref=e239]:
+            - textbox "Текущий пароль" [ref=e240]:
+              - /placeholder: ""
+            - button "Show password text" [ref=e241] [cursor=pointer]:
+              - img "Show password text" [ref=e242]
+        - generic [ref=e245]:
+          - paragraph [ref=e249]: Новый пароль
+          - generic [ref=e251]:
+            - textbox "Новый пароль" [ref=e252]:
+              - /placeholder: ""
+            - button "Show password text" [ref=e253] [cursor=pointer]:
+              - img "Show password text" [ref=e254]
+        - generic [ref=e257]:
+          - paragraph [ref=e261]: Подтвердите новый пароль
+          - generic [ref=e263]:
+            - textbox "Подтвердите новый пароль" [ref=e264]:
+              - /placeholder: ""
+            - button "Show password text" [ref=e265] [cursor=pointer]:
+              - img "Show password text" [ref=e266]
+        - button "Сохранить" [ref=e271] [cursor=pointer]:
+          - paragraph [ref=e275]: Сохранить
+      - separator [ref=e280]
+      - heading "Привязка Telegram" [level=3] [ref=e285]:
+        - text: Привязка Telegram
+        - generic [ref=e286]:
+          - link "Link to heading":
+            - /url: "#privyazka-telegram"
+            - img
+      - generic [ref=e289]:
+        - generic [ref=e291]:
+          - paragraph [ref=e295]: Telegram username (без @)
+          - textbox "Telegram username (без @)" [ref=e298]:
+            - /placeholder: ""
+        - button "Привязать" [ref=e302] [cursor=pointer]:
+          - paragraph [ref=e306]: Привязать
+      - separator [ref=e311]
+      - heading "Управление пользователями" [level=3] [ref=e316]:
+        - text: Управление пользователями
+        - generic [ref=e317]:
+          - link "Link to heading":
+            - /url: "#upravlenie-polzovatelyami"
+            - img
+      - generic [ref=e320] [cursor=pointer]:
+        - checkbox "Показать неактивных"
+        - paragraph [ref=e325]: Показать неактивных
+      - group [ref=e328]:
+        - generic "keyboard_arrow_right 🟢 Директор (direktor) — director" [ref=e329] [cursor=pointer]:
+          - generic [ref=e330]:
+            - generic [ref=e332]: keyboard_arrow_right
+            - paragraph [ref=e335]: 🟢 Директор (direktor) — director
+      - separator [ref=e340]
+      - heading "Создать пользователя" [level=3] [ref=e345]:
+        - text: Создать пользователя
+        - generic [ref=e346]:
+          - link "Link to heading":
+            - /url: "#sozdat-polzovatelya"
+            - img
+      - generic [ref=e349]:
+        - generic [ref=e351]:
+          - paragraph [ref=e355]: Полное имя
+          - textbox "Полное имя" [ref=e358]:
+            - /placeholder: ""
+        - generic [ref=e360]:
+          - paragraph [ref=e364]: Пароль
+          - generic [ref=e366]:
+            - textbox "Пароль" [ref=e367]:
+              - /placeholder: ""
+            - button "Show password text" [ref=e368] [cursor=pointer]:
+              - img "Show password text" [ref=e369]
+        - generic [ref=e372]:
+          - paragraph [ref=e376]: Роли
+          - generic [ref=e379]:
+            - generic [ref=e380]:
+              - combobox "Роли" [ref=e382]
+              - generic: Choose options
+            - img "open" [ref=e384] [cursor=pointer]
+        - button "Создать" [ref=e389] [cursor=pointer]:
+          - paragraph [ref=e393]: Создать
