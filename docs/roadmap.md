@@ -211,29 +211,29 @@ class CustomerService:
 
 ---
 
-## Phase 6 — Delivery (доставки)
-> Ветка: `feature/delivery`
+## Phase 6 — Delivery (доставки) ✅
+> Ветка: `feature/delivery` → влита в `develop`
 
 **Domain**
-- [ ] `Delivery` entity, `DeliveryStatus` value object
+- [x] `Delivery` entity, `DeliveryStatus` value object
 
 **Infrastructure**
-- [ ] SQLAlchemy модель: `deliveries`
-- [ ] Репозиторий
-- [ ] Alembic миграция
+- [x] SQLAlchemy модель: `deliveries`
+- [x] Репозиторий
+- [x] Alembic миграция
 
 **Application**
-- [ ] Use cases: `pick_up_order`, `start_delivery`, `complete_delivery`, `cancel_delivery`
+- [x] Use cases: `create_delivery`, `pick_up_order`, `start_delivery`, `complete_delivery`, `cancel_delivery`
 
 **Presentation**
-- [ ] `DeliveryService`
-- [ ] Эндпоинты доставки (водитель видит только свои)
+- [x] `DeliveryService`
+- [x] Эндпоинты доставки (водитель видит только свои)
 
 **Tests**
-- [ ] Unit тесты domain: state machine доставки
-- [ ] Unit тесты use cases
-- [ ] Integration тесты репозиториев
-- [ ] Integration тесты API
+- [x] Unit тесты domain: state machine доставки (22)
+- [x] Unit тесты use cases (20)
+- [x] Integration тесты репозиториев (10)
+- [x] Integration тесты API (19)
 
 ---
 
