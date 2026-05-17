@@ -15,7 +15,7 @@ class UserModel(Base):
     is_active: Mapped[bool_active]
     telegram_username: Mapped[str | None] = mapped_column(String, nullable=True)
     telegram_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     credential: Mapped["UserCredentialModel"] = relationship(
         back_populates="user",
@@ -34,7 +34,7 @@ class UserCredentialModel(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
     hashed_password: Mapped[str_nn]
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     user: Mapped["UserModel"] = relationship(back_populates="credential")
@@ -56,7 +56,7 @@ class AuthLogModel(Base):
     username_attempt: Mapped[str_nn]
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
 
 class RefreshTokenModel(Base):
@@ -65,4 +65,4 @@ class RefreshTokenModel(Base):
     id: Mapped[intpk]
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     token: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
