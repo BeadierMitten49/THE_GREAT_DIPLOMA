@@ -2,9 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src.application.orders.exceptions import InsufficientStockError
-from src.application.references.exceptions import AlreadyExistsError
-from src.application.shared.exceptions import AlreadyExistsError as SharedAlreadyExistsError
-from src.application.shared.exceptions import NotFoundError
+from src.application.shared.exceptions import AlreadyExistsError, NotFoundError
 from src.domain.shared.exceptions import InvalidFieldError
 
 
@@ -15,10 +13,6 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AlreadyExistsError)
     async def already_exists_handler(request: Request, exc: AlreadyExistsError) -> JSONResponse:
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(SharedAlreadyExistsError)
-    async def shared_already_exists_handler(request: Request, exc: SharedAlreadyExistsError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
     @app.exception_handler(InvalidFieldError)
