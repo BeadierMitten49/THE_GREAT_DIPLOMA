@@ -9,7 +9,6 @@ from src.presentation.api.v1.orders.schemas import (
     EditOrderRequest,
     OrderItemResponse,
     OrderResponse,
-    ProductReservationResponse,
     ReserveProductRequest,
 )
 from src.presentation.api.v1.orders.service import OrderService
@@ -127,7 +126,7 @@ async def release_reservation(
     reservation_id: int,
     service: OrderService = Depends(get_order_service),
 ):
-    await service.release_reservation(reservation_id)
+    await service.release_reservation(id, reservation_id)
 
 
 @router.delete("/{id}/reservations", status_code=status.HTTP_204_NO_CONTENT)

@@ -386,12 +386,20 @@ class TestReleaseProductReservation:
     ):
         r = ProductReservation(order_id=saved_order.id, stock_id=saved_stock.id, quantity=50)
         await reservation_repo.save(r)
-        await release_product_reservation(r.id, reservation_repo)
+        await release_product_reservation(saved_order.id, r.id, reservation_repo)
         assert await reservation_repo.get_by_id(r.id) is None
 
-    async def test_raises_not_found_when_missing(self, reservation_repo):
+    async def test_raises_not_found_when_missing(self, reservation_repo, saved_order):
         with pytest.raises(NotFoundError):
-            await release_product_reservation(999, reservation_repo)
+            await release_product_reservation(saved_order.id, 999, reservation_repo)
+
+    async def test_raises_not_found_for_wrong_order(
+        self, reservation_repo, saved_order, saved_stock
+    ):
+        r = ProductReservation(order_id=saved_order.id, stock_id=saved_stock.id, quantity=50)
+        await reservation_repo.save(r)
+        with pytest.raises(NotFoundError):
+            await release_product_reservation(999, r.id, reservation_repo)
 
 
 # ---------------------------------------------------------------------------

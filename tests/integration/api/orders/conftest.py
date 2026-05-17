@@ -122,8 +122,9 @@ class FakeOrderService:
         self._next_reservation_id += 1
         return rid
 
-    async def release_reservation(self, reservation_id: int) -> None:
-        if reservation_id not in self._reservations:
+    async def release_reservation(self, order_id: int, reservation_id: int) -> None:
+        r = self._reservations.get(reservation_id)
+        if r is None or r.order_id != order_id:
             raise NotFoundError("ProductReservation", reservation_id)
         del self._reservations[reservation_id]
 
