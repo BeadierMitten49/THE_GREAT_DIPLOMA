@@ -8,6 +8,18 @@ client = get_client()
 roles = st.session_state.get("roles", [])
 is_director = "director" in roles
 
+TASK_STATUS_LABELS = {
+    "created": "Создана",
+    "in_progress": "В работе",
+    "stopped": "Остановлена",
+    "completed": "Завершена",
+    "closed": "Закрыта",
+}
+TASK_TYPE_LABELS = {
+    "stock_task": "Пополнение склада",
+    "order_task": "Под заказ",
+}
+
 
 def _err(e: APIError) -> None:
     st.error(f"Ошибка {e.status_code}: {e.detail}")
@@ -24,7 +36,8 @@ try:
         prod_users = [u for u in users if "production" in u.get("roles", [])]
         prod_user_map = {u["id"]: u["full_name"] for u in prod_users}
     else:
-        prod_user_map = {}
+        me = client.get("/users/me")
+        prod_user_map = {me["id"]: me["full_name"]}
 except APIError as e:
     _err(e)
     product_map = {}
@@ -32,10 +45,11 @@ except APIError as e:
     prod_user_map = {}
 
 # ── Filters ───────────────────────────────────────────────────────────────────
+status_options = ["", "created", "in_progress", "stopped", "completed", "closed"]
 status_filter = st.selectbox(
     "Статус",
-    options=["", "pending", "in_progress", "stopped", "completed", "closed", "cancelled"],
-    format_func=lambda x: x if x else "Все",
+    options=status_options,
+    format_func=lambda x: TASK_STATUS_LABELS.get(x, x) if x else "Все",
 )
 
 # ── Task list ─────────────────────────────────────────────────────────────────
@@ -47,11 +61,13 @@ except APIError as e:
 
 for t in tasks:
     prod_name = product_map.get(t["product_id"], f"id={t['product_id']}")
-    label = f"#{t['id']} — {prod_name} — {t['quantity']} шт. — {t['status']} — до {t['deadline']}"
+    status_label = TASK_STATUS_LABELS.get(t["status"], t["status"])
+    label = f"#{t['id']} — {prod_name} — {t['quantity']} шт. — {status_label} — до {t['deadline']}"
     with st.expander(label):
         executor_name = prod_user_map.get(t["executor_id"], f"id={t['executor_id']}")
+        type_label = TASK_TYPE_LABELS.get(t["task_type"], t["task_type"])
         st.write(f"Исполнитель: {executor_name}")
-        st.write(f"Тип: {t['task_type']} | Начало: {t['start_date']} | Дедлайн: {t['deadline']}")
+        st.write(f"Тип: {type_label} | Начало: {t['start_date']} | Дедлайн: {t['deadline']}")
         if t.get("comment"):
             st.write(f"Комментарий: {t['comment']}")
         if t.get("order_id"):
@@ -59,7 +75,7 @@ for t in tasks:
 
         s = t["status"]
 
-        if s == "pending":
+        if s == "created":
             if st.button("Начать", key=f"task_start_{t['id']}"):
                 try:
                     client.post(f"/tasks/{t['id']}/start")
@@ -190,7 +206,11 @@ if is_director:
                 options=list(prod_user_map.keys()),
                 format_func=lambda x: prod_user_map[x],
             )
-            task_type = st.selectbox("Тип задачи", options=["production", "repackaging"])
+            task_type = st.selectbox(
+                "Тип задачи",
+                options=["stock_task", "order_task"],
+                format_func=lambda x: TASK_TYPE_LABELS.get(x, x),
+            )
             start_date = st.date_input("Дата начала")
             deadline = st.date_input("Дедлайн")
             task_comment = st.text_input("Комментарий")

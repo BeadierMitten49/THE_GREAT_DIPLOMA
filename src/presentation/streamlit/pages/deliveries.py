@@ -8,6 +8,14 @@ client = get_client()
 roles = st.session_state.get("roles", [])
 is_director = "director" in roles
 
+DELIVERY_STATUS_LABELS = {
+    "pending": "Ожидает",
+    "picked_up": "Принята",
+    "in_transit": "В пути",
+    "completed": "Завершена",
+    "cancelled": "Отменена",
+}
+
 
 def _err(e: APIError) -> None:
     st.error(f"Ошибка {e.status_code}: {e.detail}")
@@ -20,7 +28,8 @@ try:
         delivery_users = [u for u in users if "delivery" in u.get("roles", [])]
         delivery_user_map = {u["id"]: u["full_name"] for u in delivery_users}
     else:
-        delivery_user_map = {}
+        me = client.get("/users/me")
+        delivery_user_map = {me["id"]: me["full_name"]}
 except APIError as e:
     _err(e)
     delivery_user_map = {}
@@ -29,7 +38,7 @@ except APIError as e:
 status_filter = st.selectbox(
     "Статус",
     options=["", "pending", "picked_up", "in_transit", "completed", "cancelled"],
-    format_func=lambda x: x if x else "Все",
+    format_func=lambda x: DELIVERY_STATUS_LABELS.get(x, x) if x else "Все",
 )
 
 # ── Delivery list ─────────────────────────────────────────────────────────────
@@ -44,8 +53,9 @@ except APIError as e:
 
 for d in deliveries:
     executor_name = delivery_user_map.get(d["executor_id"], f"id={d['executor_id']}")
+    status_label = DELIVERY_STATUS_LABELS.get(d["status"], d["status"])
     label = (
-        f"Заказ #{d['order_id']} — {d['status']} — "
+        f"Заказ #{d['order_id']} — {status_label} — "
         f"{d['planned_date']} — {executor_name}"
     )
     with st.expander(label):

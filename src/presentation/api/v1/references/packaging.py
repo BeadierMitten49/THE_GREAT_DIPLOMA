@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from src.presentation.api.v1.dependencies import director_only
+from src.presentation.api.v1.dependencies import authenticated, director_only
 from src.presentation.api.v1.references.dependencies import get_packaging_service
 from src.presentation.api.v1.references.schemas import (
     CreatePackagingRequest,
@@ -9,7 +9,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import PackagingService
 
-router = APIRouter(prefix="/packaging", tags=["Packaging"], dependencies=[director_only])
+router = APIRouter(prefix="/packaging", tags=["Packaging"], dependencies=[authenticated])
 
 
 def _to_response(entity) -> PackagingResponse:
@@ -35,7 +35,7 @@ async def get_packaging(id: int, service: PackagingService = Depends(get_packagi
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_packaging(
     body: CreatePackagingRequest,
     service: PackagingService = Depends(get_packaging_service),
@@ -44,7 +44,7 @@ async def create_packaging(
     return {"id": id}
 
 
-@router.patch("/{id}", response_model=PackagingResponse)
+@router.patch("/{id}", response_model=PackagingResponse, dependencies=[director_only])
 async def update_packaging(
     id: int,
     body: UpdatePackagingRequest,
@@ -54,11 +54,11 @@ async def update_packaging(
     return _to_response(await service.get(id))
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def deactivate_packaging(id: int, service: PackagingService = Depends(get_packaging_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def activate_packaging(id: int, service: PackagingService = Depends(get_packaging_service)):
     await service.activate(id)

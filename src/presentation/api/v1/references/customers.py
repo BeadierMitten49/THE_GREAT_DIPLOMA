@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from src.presentation.api.v1.dependencies import director_only
+from src.presentation.api.v1.dependencies import authenticated, director_only
 from src.presentation.api.v1.references.dependencies import get_customer_service
 from src.presentation.api.v1.references.schemas import (
     CreateCustomerRequest,
@@ -9,7 +9,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import CustomerService
 
-router = APIRouter(prefix="/customers", tags=["Customers"], dependencies=[director_only])
+router = APIRouter(prefix="/customers", tags=["Customers"], dependencies=[authenticated])
 
 
 def _to_response(entity) -> CustomerResponse:
@@ -34,7 +34,7 @@ async def get_customer(id: int, service: CustomerService = Depends(get_customer_
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_customer(
     body: CreateCustomerRequest,
     service: CustomerService = Depends(get_customer_service),
@@ -43,7 +43,7 @@ async def create_customer(
     return {"id": id}
 
 
-@router.patch("/{id}", response_model=CustomerResponse)
+@router.patch("/{id}", response_model=CustomerResponse, dependencies=[director_only])
 async def update_customer(
     id: int,
     body: UpdateCustomerRequest,
@@ -53,11 +53,11 @@ async def update_customer(
     return _to_response(await service.get(id))
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def deactivate_customer(id: int, service: CustomerService = Depends(get_customer_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def activate_customer(id: int, service: CustomerService = Depends(get_customer_service)):
     await service.activate(id)

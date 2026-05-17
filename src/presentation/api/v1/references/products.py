@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from src.presentation.api.v1.dependencies import director_only
+from src.presentation.api.v1.dependencies import authenticated, director_only
 from src.presentation.api.v1.references.dependencies import get_product_service
 from src.presentation.api.v1.references.schemas import (
     CreateProductRequest,
@@ -11,7 +11,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import ProductService
 
-router = APIRouter(prefix="/products", tags=["Products"], dependencies=[director_only])
+router = APIRouter(prefix="/products", tags=["Products"], dependencies=[authenticated])
 
 
 def _to_response(entity) -> ProductResponse:
@@ -47,7 +47,7 @@ async def get_product(id: int, service: ProductService = Depends(get_product_ser
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_product(
     body: CreateProductRequest,
     service: ProductService = Depends(get_product_service),
@@ -56,7 +56,7 @@ async def create_product(
     return {"id": id}
 
 
-@router.patch("/{id}", response_model=ProductResponse)
+@router.patch("/{id}", response_model=ProductResponse, dependencies=[director_only])
 async def update_product(
     id: int,
     body: UpdateProductRequest,
@@ -66,7 +66,7 @@ async def update_product(
     return _to_response(await service.get(id))
 
 
-@router.put("/{id}/recipe", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{id}/recipe", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def set_recipe(
     id: int,
     body: SetRecipeRequest,
@@ -76,11 +76,11 @@ async def set_recipe(
     await service.set_recipe(id, lines)
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def deactivate_product(id: int, service: ProductService = Depends(get_product_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def activate_product(id: int, service: ProductService = Depends(get_product_service)):
     await service.activate(id)

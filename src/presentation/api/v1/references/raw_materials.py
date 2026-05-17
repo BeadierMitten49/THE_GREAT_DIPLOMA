@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from src.presentation.api.v1.dependencies import director_only
+from src.presentation.api.v1.dependencies import authenticated, director_only
 from src.presentation.api.v1.references.dependencies import get_raw_material_service
 from src.presentation.api.v1.references.schemas import (
     CreateRawMaterialRequest,
@@ -9,7 +9,7 @@ from src.presentation.api.v1.references.schemas import (
 )
 from src.presentation.api.v1.references.service import RawMaterialService
 
-router = APIRouter(prefix="/raw-materials", tags=["Raw Materials"], dependencies=[director_only])
+router = APIRouter(prefix="/raw-materials", tags=["Raw Materials"], dependencies=[authenticated])
 
 
 def _to_response(entity) -> RawMaterialResponse:
@@ -36,7 +36,7 @@ async def get_raw_material(id: int, service: RawMaterialService = Depends(get_ra
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_raw_material(
     body: CreateRawMaterialRequest,
     service: RawMaterialService = Depends(get_raw_material_service),
@@ -45,7 +45,7 @@ async def create_raw_material(
     return {"id": id}
 
 
-@router.patch("/{id}", response_model=RawMaterialResponse)
+@router.patch("/{id}", response_model=RawMaterialResponse, dependencies=[director_only])
 async def update_raw_material(
     id: int,
     body: UpdateRawMaterialRequest,
@@ -55,11 +55,11 @@ async def update_raw_material(
     return _to_response(await service.get(id))
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def deactivate_raw_material(id: int, service: RawMaterialService = Depends(get_raw_material_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def activate_raw_material(id: int, service: RawMaterialService = Depends(get_raw_material_service)):
     await service.activate(id)
