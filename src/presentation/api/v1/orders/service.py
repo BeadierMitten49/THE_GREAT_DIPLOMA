@@ -98,8 +98,8 @@ class OrderService:
             self._order_repo, self._reservation_repo, self._stock_repo,
         )
 
-    async def release_reservation(self, order_id: int, reservation_id: int) -> None:
-        await release_product_reservation(order_id, reservation_id, self._reservation_repo)
+    async def release_reservation(self, reservation_id: int) -> None:
+        await release_product_reservation(reservation_id, self._reservation_repo)
 
     async def release_all_reservations(self, order_id: int) -> None:
         await release_order_reservations(order_id, self._order_repo, self._reservation_repo)

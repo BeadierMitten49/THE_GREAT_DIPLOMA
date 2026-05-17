@@ -202,7 +202,7 @@ async def test_reserve_product_order_not_found_returns_404(client: AsyncClient) 
 
 
 # ---------------------------------------------------------------------------
-# DELETE /orders/{id}/reservations/{reservation_id}
+# DELETE /orders/reservation/{reservation_id}
 # ---------------------------------------------------------------------------
 
 
@@ -211,14 +211,12 @@ async def test_release_reservation_returns_204(client: AsyncClient, saved_order_
         f"{BASE}/{saved_order_id}/reservations", json={"stock_id": 1, "quantity": 50}
     )
     rid = r.json()["id"]
-    r = await client.delete(f"{BASE}/{saved_order_id}/reservations/{rid}")
+    r = await client.delete(f"{BASE}/reservation/{rid}")
     assert r.status_code == 204
 
 
-async def test_release_reservation_not_found_returns_404(
-    client: AsyncClient, saved_order_id: int
-) -> None:
-    r = await client.delete(f"{BASE}/{saved_order_id}/reservations/999")
+async def test_release_reservation_not_found_returns_404(client: AsyncClient) -> None:
+    r = await client.delete(f"{BASE}/reservation/999")
     assert r.status_code == 404
 
 

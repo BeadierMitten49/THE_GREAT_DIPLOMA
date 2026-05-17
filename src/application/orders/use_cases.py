@@ -212,14 +212,11 @@ async def reserve_product_for_order(
 
 
 async def release_product_reservation(
-    order_id: int,
     reservation_id: int,
     reservation_repo: IProductReservationRepository,
 ) -> None:
     reservation = await reservation_repo.get_by_id(reservation_id)
     if reservation is None:
-        raise NotFoundError("ProductReservation", reservation_id)
-    if reservation.order_id != order_id:
         raise NotFoundError("ProductReservation", reservation_id)
     await reservation_repo.delete_by_id(reservation_id)
 

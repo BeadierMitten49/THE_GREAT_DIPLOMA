@@ -120,13 +120,12 @@ async def reserve_product(
     return {"id": reservation_id}
 
 
-@router.delete("/{id}/reservations/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/reservation/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def release_reservation(
-    id: int,
     reservation_id: int,
     service: OrderService = Depends(get_order_service),
 ):
-    await service.release_reservation(id, reservation_id)
+    await service.release_reservation(reservation_id)
 
 
 @router.delete("/{id}/reservations", status_code=status.HTTP_204_NO_CONTENT)
