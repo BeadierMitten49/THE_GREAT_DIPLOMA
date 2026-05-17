@@ -2,8 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src.application.orders.exceptions import InsufficientStockError
-from src.application.references.exceptions import AlreadyExistsError
-from src.application.shared.exceptions import NotFoundError
+from src.application.shared.exceptions import AlreadyExistsError, NotFoundError
 from src.domain.shared.exceptions import InvalidFieldError
 
 

@@ -33,6 +33,7 @@ from src.infrastructure.db.models.tasks import (  # noqa: F401 — register mode
     TaskCompletionModel,
     TaskStopModel,
 )
+from src.infrastructure.db.models.delivery import DeliveryModel  # noqa: F401 — register models
 
 
 @pytest.fixture(scope="session")

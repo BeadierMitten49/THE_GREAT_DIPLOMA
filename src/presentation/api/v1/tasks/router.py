@@ -4,7 +4,7 @@ from src.application.tasks.dto import CompleteTaskDTO, ConsumptionInputDTO
 from src.domain.auth.entities import User
 from src.domain.auth.value_objects import Role
 from src.domain.tasks.value_objects import TaskStatus
-from src.presentation.api.v1.auth.dependencies import get_current_user, require_role
+from src.presentation.api.v1.auth.dependencies import get_current_user
 from src.presentation.api.v1.dependencies import director_only, director_or_production
 from src.presentation.api.v1.tasks.dependencies import get_task_service
 from src.presentation.api.v1.tasks.schemas import (

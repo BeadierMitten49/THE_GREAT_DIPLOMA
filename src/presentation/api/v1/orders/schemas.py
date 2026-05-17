@@ -54,9 +54,3 @@ class OrderResponse(BaseModel):
     comment: str | None
     created_at: datetime | None
 
-
-class ProductReservationResponse(BaseModel):
-    id: int
-    order_id: int
-    stock_id: int
-    quantity: int

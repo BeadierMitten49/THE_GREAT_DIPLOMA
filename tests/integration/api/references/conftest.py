@@ -46,7 +46,7 @@ class FakeCustomerService:
 
     async def create(self, name: str, default_address: str) -> int:
         if any(c.name == name for c in self._store.values()):
-            raise AlreadyExistsError("Customer", name)
+            raise AlreadyExistsError("\1", "name", name)
         item = Customer(name=name, default_address=default_address, id=self._next_id)
         self._store[self._next_id] = item
         self._next_id += 1
@@ -55,7 +55,7 @@ class FakeCustomerService:
     async def update(self, id: int, name: str, default_address: str) -> None:
         item = await self.get(id)
         if any(c.name == name and c.id != id for c in self._store.values()):
-            raise AlreadyExistsError("Customer", name)
+            raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.default_address = default_address
 
@@ -85,7 +85,7 @@ class FakeProductService:
         self, name: str, units_per_box: int, shelf_life_days: int, critical_stock: int
     ) -> int:
         if any(p.name == name for p in self._store.values()):
-            raise AlreadyExistsError("Product", name)
+            raise AlreadyExistsError("\1", "name", name)
         item = Product(
             name=name,
             units_per_box=units_per_box,
@@ -102,7 +102,7 @@ class FakeProductService:
     ) -> None:
         item = await self.get(id)
         if any(p.name == name and p.id != id for p in self._store.values()):
-            raise AlreadyExistsError("Product", name)
+            raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.units_per_box = units_per_box
         item.shelf_life_days = shelf_life_days
@@ -141,7 +141,7 @@ class FakeRawMaterialService:
         self, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal
     ) -> int:
         if any(r.name == name for r in self._store.values()):
-            raise AlreadyExistsError("RawMaterialCatalog", name)
+            raise AlreadyExistsError("\1", "name", name)
         item = RawMaterialCatalog(
             name=name,
             unit=unit,
@@ -158,7 +158,7 @@ class FakeRawMaterialService:
     ) -> None:
         item = await self.get(id)
         if any(r.name == name and r.id != id for r in self._store.values()):
-            raise AlreadyExistsError("RawMaterialCatalog", name)
+            raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.unit = unit
         item.shelf_life_days = shelf_life_days
@@ -188,7 +188,7 @@ class FakePackagingService:
 
     async def create(self, name: str, unit: str, critical_stock: int) -> int:
         if any(p.name == name for p in self._store.values()):
-            raise AlreadyExistsError("PackagingCatalog", name)
+            raise AlreadyExistsError("\1", "name", name)
         item = PackagingCatalog(
             name=name, unit=unit, critical_stock=critical_stock, id=self._next_id
         )
@@ -199,7 +199,7 @@ class FakePackagingService:
     async def update(self, id: int, name: str, unit: str, critical_stock: int) -> None:
         item = await self.get(id)
         if any(p.name == name and p.id != id for p in self._store.values()):
-            raise AlreadyExistsError("PackagingCatalog", name)
+            raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.unit = unit
         item.critical_stock = critical_stock
