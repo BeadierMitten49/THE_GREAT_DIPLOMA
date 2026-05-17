@@ -30,7 +30,16 @@ if submitted:
                 }
                 st.session_state["roles"] = payload.get("roles", [])
                 st.session_state["user_id"] = int(payload["sub"])
-                st.session_state["user_info"] = {"full_name": username}
+                try:
+                    with httpx.Client(timeout=10.0) as me_client:
+                        me_resp = me_client.get(
+                            f"{API_BASE_URL}/users/me",
+                            headers={"Authorization": f"Bearer {data['access_token']}"},
+                        )
+                    full_name = me_resp.json().get("full_name", username) if me_resp.status_code == 200 else username
+                except Exception:
+                    full_name = username
+                st.session_state["user_info"] = {"full_name": full_name}
                 st.rerun()
             elif resp.status_code == 429:
                 st.error("Аккаунт заблокирован. Попробуйте через 30 минут.")
