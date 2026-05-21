@@ -4,6 +4,11 @@ class AuthenticationError(Exception):
         super().__init__(reason)
 
 
+class DeactivatedUserError(Exception):
+    def __init__(self) -> None:
+        super().__init__("user account is deactivated")
+
+
 class RateLimitError(Exception):
     def __init__(self, username: str) -> None:
         self.username = username

@@ -9,7 +9,7 @@ from src.application.auth.dto import (
     TokenPairDTO,
     UpdateUserDTO,
 )
-from src.application.auth.exceptions import AuthenticationError, InvalidTokenError, RateLimitError
+from src.application.auth.exceptions import AuthenticationError, DeactivatedUserError, InvalidTokenError, RateLimitError
 from src.application.ports.auth import (
     IAuthLogRepository,
     IJWTService,
@@ -169,7 +169,7 @@ async def login(
 
     if not user.is_active:
         await auth_log_repo.log_attempt(dto.username, user.id, success=False)
-        raise AuthenticationError("user is deactivated")
+        raise DeactivatedUserError()
 
     hashed = await cred_repo.get_hashed_password(user.id)
     if hashed is None or not hasher.verify(dto.password, hashed):
