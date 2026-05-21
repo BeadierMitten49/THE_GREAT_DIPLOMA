@@ -21,3 +21,14 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+async def get_log_session() -> AsyncGenerator[AsyncSession, None]:
+    """Сессия для аудит-лога — коммитит всегда, даже при исключении."""
+    async with AsyncSessionFactory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.commit()
+            raise

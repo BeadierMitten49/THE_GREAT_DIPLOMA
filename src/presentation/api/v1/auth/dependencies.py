@@ -6,15 +6,18 @@ from src.application.auth.exceptions import InvalidTokenError
 from src.domain.auth.entities import User
 from src.domain.auth.value_objects import Role
 from src.infrastructure.db.repositories.auth import UserRepository
-from src.infrastructure.db.session import get_session
+from src.infrastructure.db.session import get_log_session, get_session
 from src.infrastructure.security.jwt_service import JWTService
 from src.presentation.api.v1.auth.service import AuthService, UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
-def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
-    return AuthService(session)
+def get_auth_service(
+    session: AsyncSession = Depends(get_session),
+    log_session: AsyncSession = Depends(get_log_session),
+) -> AuthService:
+    return AuthService(session=session, log_session=log_session)
 
 
 def get_user_service(session: AsyncSession = Depends(get_session)) -> UserService:

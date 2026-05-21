@@ -2,7 +2,7 @@
 
 ---
 
-## BF-002 — auth_log не сохраняется при неудачном входе → rate limiting не работает
+## ~~BF-002~~ ✅ FIXED — auth_log не сохраняется при неудачном входе → rate limiting не работает
 
 **Файл:** `src/presentation/api/v1/auth/auth.py` (обработка исключений), session middleware
 **Проблема:** `log_attempt(success=False)` вызывается до `raise AuthenticationError()`, но исключение откатывает DB-сессию — запись в `auth_log` не сохраняется. Из-за этого `count_failed_recent` всегда возвращает 0 и `RateLimitError` никогда не срабатывает.

@@ -36,11 +36,11 @@ from src.infrastructure.security.password_hasher import BcryptPasswordHasher
 
 
 class AuthService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, log_session: AsyncSession) -> None:
         self._user_repo = UserRepository(session)
         self._cred_repo = UserCredentialRepository(session)
         self._token_repo = RefreshTokenRepository(session)
-        self._auth_log_repo = AuthLogRepository(session)
+        self._auth_log_repo = AuthLogRepository(log_session)
         self._hasher = BcryptPasswordHasher()
         self._jwt = JWTService()
 
