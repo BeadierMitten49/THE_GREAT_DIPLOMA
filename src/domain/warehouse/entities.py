@@ -21,6 +21,12 @@ class RawMaterialStock:
             raise InvalidFieldError("amount", "exceeds available quantity")
         self.quantity -= amount
 
+    def adjust(self, new_quantity: Decimal, comment: str | None) -> None:
+        if new_quantity < 0:
+            raise InvalidFieldError("new_quantity", "must be >= 0")
+        self.quantity = new_quantity
+        self.comment = comment
+
 
 @dataclass
 class PackagingStock:

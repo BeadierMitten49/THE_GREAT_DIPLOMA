@@ -19,6 +19,13 @@ class RawMaterialStockWriteOffDTO:
 
 
 @dataclass(frozen=True)
+class RawMaterialStockAdjustDTO:
+    stock_id: int
+    quantity: Decimal
+    comment: str | None
+
+
+@dataclass(frozen=True)
 class PackagingStockArrivalDTO:
     packaging_id: int
     quantity: int

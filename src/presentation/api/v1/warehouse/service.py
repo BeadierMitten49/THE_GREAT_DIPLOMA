@@ -8,6 +8,7 @@ from src.application.warehouse.dto import (
     PackagingStockWriteOffDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
+    RawMaterialStockAdjustDTO,
     RawMaterialStockArrivalDTO,
     RawMaterialStockWriteOffDTO,
 )
@@ -25,10 +26,12 @@ from src.application.warehouse.use_cases import (
     packaging_stock_write_off,
     product_stock_arrival,
     product_stock_write_off,
+    raw_material_stock_adjust,
     raw_material_stock_arrival,
     raw_material_stock_write_off,
 )
 from src.domain.warehouse.entities import PackagingStock, ProductStock, RawMaterialStock
+from src.infrastructure.db.repositories.tasks import RawMaterialReservationRepository
 from src.infrastructure.db.repositories.warehouse import (
     PackagingStockRepository,
     ProductStockRepository,
@@ -39,6 +42,7 @@ from src.infrastructure.db.repositories.warehouse import (
 class RawMaterialStockService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = RawMaterialStockRepository(session)
+        self._reservation_repo = RawMaterialReservationRepository(session)
 
     async def get(self, id: int) -> RawMaterialStock:
         return await get_raw_material_stock(id, self._repo)
@@ -48,6 +52,10 @@ class RawMaterialStockService:
 
     async def get_by_material(self, raw_material_id: int) -> list[RawMaterialStock]:
         return await get_raw_material_stocks_by_material(raw_material_id, self._repo)
+
+    async def get_reserved(self, stock_id: int) -> Decimal:
+        reservations = await self._reservation_repo.get_by_stock(stock_id)
+        return sum((r.quantity for r in reservations), Decimal("0"))
 
     async def arrival(
         self,
@@ -64,6 +72,9 @@ class RawMaterialStockService:
 
     async def write_off(self, stock_id: int, amount: Decimal) -> None:
         await raw_material_stock_write_off(RawMaterialStockWriteOffDTO(stock_id, amount), self._repo)
+
+    async def adjust(self, stock_id: int, quantity: Decimal, comment: str | None) -> None:
+        await raw_material_stock_adjust(RawMaterialStockAdjustDTO(stock_id, quantity, comment), self._repo)
 
 
 class PackagingStockService:

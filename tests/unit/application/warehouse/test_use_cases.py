@@ -8,6 +8,7 @@ from src.application.warehouse.dto import (
     PackagingStockWriteOffDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
+    RawMaterialStockAdjustDTO,
     RawMaterialStockArrivalDTO,
     RawMaterialStockWriteOffDTO,
 )
@@ -26,6 +27,7 @@ from src.application.warehouse.use_cases import (
     packaging_stock_write_off,
     product_stock_arrival,
     product_stock_write_off,
+    raw_material_stock_adjust,
     raw_material_stock_arrival,
     raw_material_stock_write_off,
 )
@@ -82,6 +84,24 @@ class TestRawMaterialStockArrival:
         assert isinstance(id_, int)
         saved = await raw_material_stock_repo.get_by_id(id_)
         assert saved.quantity == Decimal("50.0")
+
+
+class TestRawMaterialStockAdjust:
+    async def test_sets_new_quantity(self, raw_material_stock_repo, saved_raw_material_stock):
+        dto = RawMaterialStockAdjustDTO(
+            stock_id=saved_raw_material_stock.id,
+            quantity=Decimal("42.0"),
+            comment="fixed",
+        )
+        await raw_material_stock_adjust(dto, raw_material_stock_repo)
+        updated = await raw_material_stock_repo.get_by_id(saved_raw_material_stock.id)
+        assert updated.quantity == Decimal("42.0")
+        assert updated.comment == "fixed"
+
+    async def test_raises_not_found_when_stock_missing(self, raw_material_stock_repo):
+        dto = RawMaterialStockAdjustDTO(stock_id=999, quantity=Decimal("1.0"), comment=None)
+        with pytest.raises(NotFoundError):
+            await raw_material_stock_adjust(dto, raw_material_stock_repo)
 
 
 class TestRawMaterialStockWriteOff:

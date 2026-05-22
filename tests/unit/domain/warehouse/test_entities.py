@@ -12,6 +12,42 @@ from src.domain.warehouse.entities import PackagingStock, ProductStock, RawMater
 # ---------------------------------------------------------------------------
 
 
+class TestRawMaterialStockAdjust:
+    def _make(self, quantity: str = "100.000") -> RawMaterialStock:
+        return RawMaterialStock(
+            raw_material_id=1,
+            quantity=Decimal(quantity),
+            arrival_date=date(2026, 1, 1),
+            expiry_date=date(2026, 6, 1),
+            comment="original",
+        )
+
+    def test_adjust_sets_new_quantity(self):
+        stock = self._make("100.000")
+        stock.adjust(Decimal("75.000"), None)
+        assert stock.quantity == Decimal("75.000")
+
+    def test_adjust_updates_comment(self):
+        stock = self._make()
+        stock.adjust(Decimal("50.000"), "corrected")
+        assert stock.comment == "corrected"
+
+    def test_adjust_clears_comment_when_none(self):
+        stock = self._make()
+        stock.adjust(Decimal("50.000"), None)
+        assert stock.comment is None
+
+    def test_adjust_allows_zero_quantity(self):
+        stock = self._make()
+        stock.adjust(Decimal("0"), None)
+        assert stock.quantity == Decimal("0")
+
+    def test_adjust_negative_quantity_raises(self):
+        stock = self._make()
+        with pytest.raises(InvalidFieldError):
+            stock.adjust(Decimal("-1"), None)
+
+
 class TestRawMaterialStockWriteOff:
     def _make(self, quantity: str = "100.000") -> RawMaterialStock:
         return RawMaterialStock(

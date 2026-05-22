@@ -21,10 +21,16 @@ class RawMaterialStockWriteOffRequest(BaseModel):
     amount: Decimal = Field(gt=0)
 
 
+class RawMaterialStockAdjustRequest(BaseModel):
+    quantity: Decimal = Field(ge=0)
+    comment: str | None = None
+
+
 class RawMaterialStockResponse(BaseModel):
     id: int
     raw_material_id: int
     quantity: Decimal
+    reserved: Decimal
     arrival_date: date
     expiry_date: date
     comment: str | None

@@ -41,6 +41,9 @@ class FakeRawMaterialStockService:
     async def get_by_material(self, raw_material_id: int) -> list[RawMaterialStock]:
         return [s for s in self._store.values() if s.raw_material_id == raw_material_id]
 
+    async def get_reserved(self, stock_id: int) -> Decimal:
+        return Decimal("0")
+
     async def arrival(
         self,
         raw_material_id: int,
@@ -66,6 +69,12 @@ class FakeRawMaterialStockService:
         if stock is None:
             raise NotFoundError("RawMaterialStock", stock_id)
         stock.write_off(amount)
+
+    async def adjust(self, stock_id: int, quantity: Decimal, comment: str | None) -> None:
+        stock = self._store.get(stock_id)
+        if stock is None:
+            raise NotFoundError("RawMaterialStock", stock_id)
+        stock.adjust(quantity, comment)
 
 
 class FakePackagingStockService:

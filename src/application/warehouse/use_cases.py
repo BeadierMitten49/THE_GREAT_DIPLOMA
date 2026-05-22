@@ -3,6 +3,7 @@ from src.application.warehouse.dto import (
     PackagingStockWriteOffDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
+    RawMaterialStockAdjustDTO,
     RawMaterialStockArrivalDTO,
     RawMaterialStockWriteOffDTO,
 )
@@ -57,6 +58,16 @@ async def raw_material_stock_write_off(
     if stock is None:
         raise NotFoundError("RawMaterialStock", dto.stock_id)
     stock.write_off(dto.amount)
+    await repo.save(stock)
+
+
+async def raw_material_stock_adjust(
+    dto: RawMaterialStockAdjustDTO, repo: IRawMaterialStockRepository
+) -> None:
+    stock = await repo.get_by_id(dto.stock_id)
+    if stock is None:
+        raise NotFoundError("RawMaterialStock", dto.stock_id)
+    stock.adjust(dto.quantity, dto.comment)
     await repo.save(stock)
 
 
