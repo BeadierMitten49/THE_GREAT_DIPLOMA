@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.warehouse.dto import (
     PackagingStockArrivalDTO,
     PackagingStockWriteOffDTO,
+    ProductStockAdjustDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
     RawMaterialStockAdjustDTO,
@@ -24,6 +25,7 @@ from src.application.warehouse.use_cases import (
     get_raw_material_stocks_by_material,
     packaging_stock_arrival,
     packaging_stock_write_off,
+    product_stock_adjust,
     product_stock_arrival,
     product_stock_write_off,
     raw_material_stock_adjust,
@@ -31,6 +33,7 @@ from src.application.warehouse.use_cases import (
     raw_material_stock_write_off,
 )
 from src.domain.warehouse.entities import PackagingStock, ProductStock, RawMaterialStock
+from src.infrastructure.db.repositories.orders import ProductReservationRepository
 from src.infrastructure.db.repositories.tasks import RawMaterialReservationRepository
 from src.infrastructure.db.repositories.warehouse import (
     PackagingStockRepository,
@@ -102,9 +105,16 @@ class PackagingStockService:
 class ProductStockService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = ProductStockRepository(session)
+        self._reservation_repo = ProductReservationRepository(session)
 
     async def get(self, id: int) -> ProductStock:
         return await get_product_stock(id, self._repo)
+
+    async def get_reserved(self, stock_id: int) -> tuple[int, list[int]]:
+        reservations = await self._reservation_repo.get_by_stock(stock_id)
+        total = sum(r.quantity for r in reservations)
+        order_ids = sorted(set(r.order_id for r in reservations))
+        return total, order_ids
 
     async def get_all(self) -> list[ProductStock]:
         return await get_product_stocks(self._repo)
@@ -124,6 +134,9 @@ class ProductStockService:
             ProductStockArrivalDTO(product_id, quantity, arrival_date, expiry_date, comment),
             self._repo,
         )
+
+    async def adjust(self, stock_id: int, quantity: int, comment: str | None) -> None:
+        await product_stock_adjust(ProductStockAdjustDTO(stock_id, quantity, comment), self._repo)
 
     async def write_off(self, stock_id: int, amount: int) -> None:
         await product_stock_write_off(ProductStockWriteOffDTO(stock_id, amount), self._repo)

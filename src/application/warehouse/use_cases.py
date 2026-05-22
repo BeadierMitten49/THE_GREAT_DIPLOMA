@@ -1,6 +1,7 @@
 from src.application.warehouse.dto import (
     PackagingStockArrivalDTO,
     PackagingStockWriteOffDTO,
+    ProductStockAdjustDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
     RawMaterialStockAdjustDTO,
@@ -134,6 +135,16 @@ async def get_product_stocks_by_product(
     product_id: int, repo: IProductStockRepository
 ) -> list[ProductStock]:
     return await repo.get_by_product(product_id)
+
+
+async def product_stock_adjust(
+    dto: ProductStockAdjustDTO, repo: IProductStockRepository
+) -> None:
+    stock = await repo.get_by_id(dto.stock_id)
+    if stock is None:
+        raise NotFoundError("ProductStock", dto.stock_id)
+    stock.adjust(dto.quantity, dto.comment)
+    await repo.save(stock)
 
 
 async def product_stock_write_off(

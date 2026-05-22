@@ -48,6 +48,13 @@ class ProductStockArrivalDTO:
 
 
 @dataclass(frozen=True)
+class ProductStockAdjustDTO:
+    stock_id: int
+    quantity: int
+    comment: str | None
+
+
+@dataclass(frozen=True)
 class ProductStockWriteOffDTO:
     stock_id: int
     amount: int

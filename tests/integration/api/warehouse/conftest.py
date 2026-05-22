@@ -129,6 +129,9 @@ class FakeProductStockService:
     async def get_by_product(self, product_id: int) -> list[ProductStock]:
         return [s for s in self._store.values() if s.product_id == product_id]
 
+    async def get_reserved(self, stock_id: int) -> tuple[int, list[int]]:
+        return 0, []
+
     async def arrival(
         self,
         product_id: int,
@@ -150,6 +153,12 @@ class FakeProductStockService:
         self._store[self._next_id] = stock
         self._next_id += 1
         return stock.id
+
+    async def adjust(self, stock_id: int, quantity: int, comment: str | None) -> None:
+        stock = self._store.get(stock_id)
+        if stock is None:
+            raise NotFoundError("ProductStock", stock_id)
+        stock.adjust(quantity, comment)
 
     async def write_off(self, stock_id: int, amount: int) -> None:
         stock = self._store.get(stock_id)

@@ -6,6 +6,7 @@ import pytest
 from src.application.warehouse.dto import (
     PackagingStockArrivalDTO,
     PackagingStockWriteOffDTO,
+    ProductStockAdjustDTO,
     ProductStockArrivalDTO,
     ProductStockWriteOffDTO,
     RawMaterialStockAdjustDTO,
@@ -25,6 +26,7 @@ from src.application.warehouse.use_cases import (
     get_raw_material_stocks_by_material,
     packaging_stock_arrival,
     packaging_stock_write_off,
+    product_stock_adjust,
     product_stock_arrival,
     product_stock_write_off,
     raw_material_stock_adjust,
@@ -236,6 +238,24 @@ class TestProductStockArrival:
         id_ = await product_stock_arrival(dto, product_stock_repo)
         saved = await product_stock_repo.get_by_id(id_)
         assert saved.batch_number == 2  # saved_product_stock already has batch_number=1 in 2026
+
+
+class TestProductStockAdjust:
+    async def test_sets_new_quantity(self, product_stock_repo, saved_product_stock):
+        dto = ProductStockAdjustDTO(
+            stock_id=saved_product_stock.id,
+            quantity=42,
+            comment="fixed",
+        )
+        await product_stock_adjust(dto, product_stock_repo)
+        updated = await product_stock_repo.get_by_id(saved_product_stock.id)
+        assert updated.quantity == 42
+        assert updated.comment == "fixed"
+
+    async def test_raises_not_found_when_stock_missing(self, product_stock_repo):
+        dto = ProductStockAdjustDTO(stock_id=999, quantity=1, comment=None)
+        with pytest.raises(NotFoundError):
+            await product_stock_adjust(dto, product_stock_repo)
 
 
 class TestProductStockWriteOff:

@@ -123,6 +123,44 @@ class TestPackagingStockWriteOff:
 # ---------------------------------------------------------------------------
 
 
+class TestProductStockAdjust:
+    def _make(self, quantity: int = 100) -> ProductStock:
+        return ProductStock(
+            product_id=1,
+            quantity=quantity,
+            batch_number=1,
+            batch_year=2026,
+            arrival_date=date(2026, 1, 1),
+            expiry_date=date(2026, 7, 1),
+            comment="original",
+        )
+
+    def test_adjust_sets_new_quantity(self):
+        stock = self._make(100)
+        stock.adjust(75, None)
+        assert stock.quantity == 75
+
+    def test_adjust_updates_comment(self):
+        stock = self._make()
+        stock.adjust(50, "corrected")
+        assert stock.comment == "corrected"
+
+    def test_adjust_clears_comment_when_none(self):
+        stock = self._make()
+        stock.adjust(50, None)
+        assert stock.comment is None
+
+    def test_adjust_allows_zero_quantity(self):
+        stock = self._make()
+        stock.adjust(0, None)
+        assert stock.quantity == 0
+
+    def test_adjust_negative_quantity_raises(self):
+        stock = self._make()
+        with pytest.raises(InvalidFieldError):
+            stock.adjust(-1, None)
+
+
 class TestProductStockWriteOff:
     def _make(self, quantity: int = 1000) -> ProductStock:
         return ProductStock(

@@ -54,6 +54,12 @@ class ProductStock:
     id: int | None = None
     comment: str | None = None
 
+    def adjust(self, new_quantity: int, comment: str | None) -> None:
+        if new_quantity < 0:
+            raise InvalidFieldError("new_quantity", "must be >= 0")
+        self.quantity = new_quantity
+        self.comment = comment
+
     def write_off(self, amount: int) -> None:
         if amount <= 0:
             raise InvalidFieldError("amount", "must be > 0")

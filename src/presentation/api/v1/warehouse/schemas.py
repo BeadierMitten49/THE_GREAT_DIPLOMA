@@ -71,6 +71,11 @@ class ProductStockArrivalRequest(BaseModel):
     comment: str | None = None
 
 
+class ProductStockAdjustRequest(BaseModel):
+    quantity: int = Field(ge=0)
+    comment: str | None = None
+
+
 class ProductStockWriteOffRequest(BaseModel):
     amount: int = Field(gt=0)
 
@@ -79,6 +84,8 @@ class ProductStockResponse(BaseModel):
     id: int
     product_id: int
     quantity: int
+    reserved: int
+    reserved_orders: list[int]
     batch_number: int
     batch_year: int
     arrival_date: date
