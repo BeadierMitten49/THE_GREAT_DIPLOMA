@@ -39,17 +39,21 @@ class Customer:
     name: str
     default_address: str
     is_active: bool = True
+    contact: str = ""
+    comment: str = ""
     id: int | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty(self.name, "name")
         _require_non_empty(self.default_address, "default_address")
 
-    def update(self, name: str, default_address: str) -> None:
+    def update(self, name: str, default_address: str, contact: str = "", comment: str = "") -> None:
         _require_non_empty(name, "name")
         _require_non_empty(default_address, "default_address")
         self.name = name
         self.default_address = default_address
+        self.contact = contact
+        self.comment = comment
 
     def deactivate(self) -> None:
         self.is_active = False
@@ -101,6 +105,7 @@ class RawMaterialCatalog:
     shelf_life_days: int
     critical_stock: Decimal
     is_active: bool = True
+    comment: str = ""
     id: int | None = None
 
     def __post_init__(self) -> None:
@@ -109,7 +114,7 @@ class RawMaterialCatalog:
         _require_positive_int(self.shelf_life_days, "shelf_life_days")
         _require_non_negative(self.critical_stock, "critical_stock")
 
-    def update(self, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal) -> None:
+    def update(self, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal, comment: str = "") -> None:
         _require_non_empty(name, "name")
         _require_non_empty(unit, "unit")
         _require_positive_int(shelf_life_days, "shelf_life_days")
@@ -118,6 +123,7 @@ class RawMaterialCatalog:
         self.unit = unit
         self.shelf_life_days = shelf_life_days
         self.critical_stock = critical_stock
+        self.comment = comment
 
     def deactivate(self) -> None:
         self.is_active = False
@@ -132,6 +138,7 @@ class PackagingCatalog:
     unit: str
     critical_stock: int
     is_active: bool = True
+    comment: str = ""
     id: int | None = None
 
     def __post_init__(self) -> None:
@@ -139,13 +146,14 @@ class PackagingCatalog:
         _require_non_empty(self.unit, "unit")
         _require_non_negative(self.critical_stock, "critical_stock")
 
-    def update(self, name: str, unit: str, critical_stock: int) -> None:
+    def update(self, name: str, unit: str, critical_stock: int, comment: str = "") -> None:
         _require_non_empty(name, "name")
         _require_non_empty(unit, "unit")
         _require_non_negative(critical_stock, "critical_stock")
         self.name = name
         self.unit = unit
         self.critical_stock = critical_stock
+        self.comment = comment
 
     def deactivate(self) -> None:
         self.is_active = False

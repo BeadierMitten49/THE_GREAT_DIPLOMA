@@ -44,7 +44,7 @@ async def get_customers(repo: ICustomerRepository, include_inactive: bool = Fals
 async def create_customer(dto: CreateCustomerDTO, repo: ICustomerRepository) -> int:
     if await repo.exists_by_name(dto.name):
         raise AlreadyExistsError("Customer", "name", dto.name)
-    customer = Customer(name=dto.name, default_address=dto.default_address)
+    customer = Customer(name=dto.name, default_address=dto.default_address, contact=dto.contact, comment=dto.comment)
     return await repo.save(customer)
 
 
@@ -52,7 +52,7 @@ async def update_customer(id: int, dto: UpdateCustomerDTO, repo: ICustomerReposi
     customer = await get_customer(id, repo)
     if await repo.exists_by_name(dto.name, exclude_id=id):
         raise AlreadyExistsError("Customer", "name", dto.name)
-    customer.update(dto.name, dto.default_address)
+    customer.update(dto.name, dto.default_address, dto.contact, dto.comment)
     await repo.save(customer)
 
 
@@ -155,6 +155,7 @@ async def create_raw_material(dto: CreateRawMaterialDTO, repo: IRawMaterialCatal
         unit=dto.unit,
         shelf_life_days=dto.shelf_life_days,
         critical_stock=dto.critical_stock,
+        comment=dto.comment,
     )
     return await repo.save(item)
 
@@ -165,7 +166,7 @@ async def update_raw_material(
     item = await get_raw_material(id, repo)
     if await repo.exists_by_name(dto.name, exclude_id=id):
         raise AlreadyExistsError("RawMaterialCatalog", "name", dto.name)
-    item.update(dto.name, dto.unit, dto.shelf_life_days, dto.critical_stock)
+    item.update(dto.name, dto.unit, dto.shelf_life_days, dto.critical_stock, dto.comment)
     await repo.save(item)
 
 
@@ -202,7 +203,7 @@ async def get_packagings(
 async def create_packaging(dto: CreatePackagingDTO, repo: IPackagingCatalogRepository) -> int:
     if await repo.exists_by_name(dto.name):
         raise AlreadyExistsError("PackagingCatalog", "name", dto.name)
-    item = PackagingCatalog(name=dto.name, unit=dto.unit, critical_stock=dto.critical_stock)
+    item = PackagingCatalog(name=dto.name, unit=dto.unit, critical_stock=dto.critical_stock, comment=dto.comment)
     return await repo.save(item)
 
 
@@ -212,7 +213,7 @@ async def update_packaging(
     item = await get_packaging(id, repo)
     if await repo.exists_by_name(dto.name, exclude_id=id):
         raise AlreadyExistsError("PackagingCatalog", "name", dto.name)
-    item.update(dto.name, dto.unit, dto.critical_stock)
+    item.update(dto.name, dto.unit, dto.critical_stock, dto.comment)
     await repo.save(item)
 
 

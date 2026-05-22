@@ -19,6 +19,7 @@ def _to_response(entity) -> PackagingResponse:
         unit=entity.unit,
         critical_stock=entity.critical_stock,
         is_active=entity.is_active,
+        comment=entity.comment,
     )
 
 
@@ -40,7 +41,7 @@ async def create_packaging(
     body: CreatePackagingRequest,
     service: PackagingService = Depends(get_packaging_service),
 ):
-    id = await service.create(body.name, body.unit, body.critical_stock)
+    id = await service.create(body.name, body.unit, body.critical_stock, body.comment)
     return {"id": id}
 
 
@@ -50,7 +51,7 @@ async def update_packaging(
     body: UpdatePackagingRequest,
     service: PackagingService = Depends(get_packaging_service),
 ):
-    await service.update(id, body.name, body.unit, body.critical_stock)
+    await service.update(id, body.name, body.unit, body.critical_stock, body.comment)
     return _to_response(await service.get(id))
 
 

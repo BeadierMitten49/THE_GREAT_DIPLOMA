@@ -37,3 +37,4 @@ __pycache__/
 # project
 .env
 *.txt
+html_pages/

@@ -11,11 +11,15 @@ from pydantic import BaseModel, Field
 class CreateCustomerRequest(BaseModel):
     name: str
     default_address: str
+    contact: str = ""
+    comment: str = ""
 
 
 class UpdateCustomerRequest(BaseModel):
     name: str
     default_address: str
+    contact: str = ""
+    comment: str = ""
 
 
 class CustomerResponse(BaseModel):
@@ -23,6 +27,8 @@ class CustomerResponse(BaseModel):
     name: str
     default_address: str
     is_active: bool
+    contact: str
+    comment: str
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +87,7 @@ class CreateRawMaterialRequest(BaseModel):
     unit: str
     shelf_life_days: int = Field(gt=0)
     critical_stock: Decimal = Field(ge=0)
+    comment: str = ""
 
 
 class UpdateRawMaterialRequest(BaseModel):
@@ -88,6 +95,7 @@ class UpdateRawMaterialRequest(BaseModel):
     unit: str
     shelf_life_days: int = Field(gt=0)
     critical_stock: Decimal = Field(ge=0)
+    comment: str = ""
 
 
 class RawMaterialResponse(BaseModel):
@@ -97,6 +105,7 @@ class RawMaterialResponse(BaseModel):
     shelf_life_days: int
     critical_stock: Decimal
     is_active: bool
+    comment: str
 
 
 # ---------------------------------------------------------------------------
@@ -108,12 +117,14 @@ class CreatePackagingRequest(BaseModel):
     name: str
     unit: str
     critical_stock: int = Field(ge=0)
+    comment: str = ""
 
 
 class UpdatePackagingRequest(BaseModel):
     name: str
     unit: str
     critical_stock: int = Field(ge=0)
+    comment: str = ""
 
 
 class PackagingResponse(BaseModel):
@@ -122,3 +133,4 @@ class PackagingResponse(BaseModel):
     unit: str
     critical_stock: int
     is_active: bool
+    comment: str

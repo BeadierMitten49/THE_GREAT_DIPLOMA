@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from sqlalchemy import ForeignKey, Integer, Numeric
+from sqlalchemy import ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.infrastructure.db.models import Base, bool_active, intpk, str_nn
@@ -14,6 +14,8 @@ class CustomerModel(Base):
     name: Mapped[str_nn]
     default_address: Mapped[str_nn]
     is_active: Mapped[bool_active]
+    contact: Mapped[str] = mapped_column(String, nullable=False, default="")
+    comment: Mapped[str] = mapped_column(String, nullable=False, default="")
 
 
 class ProductModel(Base):
@@ -40,6 +42,7 @@ class RawMaterialCatalogModel(Base):
     shelf_life_days: Mapped[int] = mapped_column(Integer, nullable=False)
     critical_stock: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False)
     is_active: Mapped[bool_active]
+    comment: Mapped[str] = mapped_column(String, nullable=False, default="")
 
 
 class PackagingCatalogModel(Base):
@@ -50,6 +53,7 @@ class PackagingCatalogModel(Base):
     unit: Mapped[str_nn]
     critical_stock: Mapped[int] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool_active]
+    comment: Mapped[str] = mapped_column(String, nullable=False, default="")
 
 
 class RecipeLineModel(Base):

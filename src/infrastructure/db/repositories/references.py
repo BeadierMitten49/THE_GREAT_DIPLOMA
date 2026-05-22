@@ -36,6 +36,8 @@ class CustomerRepository(BaseCatalogRepository[Customer, CustomerModel], ICustom
             name=model.name,
             default_address=model.default_address,
             is_active=model.is_active,
+            contact=model.contact,
+            comment=model.comment,
             id=model.id,
         )
 
@@ -44,6 +46,8 @@ class CustomerRepository(BaseCatalogRepository[Customer, CustomerModel], ICustom
             "name": entity.name,
             "default_address": entity.default_address,
             "is_active": entity.is_active,
+            "contact": entity.contact,
+            "comment": entity.comment,
         }
 
 
@@ -62,6 +66,7 @@ class RawMaterialCatalogRepository(
             shelf_life_days=model.shelf_life_days,
             critical_stock=Decimal(str(model.critical_stock)),
             is_active=model.is_active,
+            comment=model.comment,
             id=model.id,
         )
 
@@ -72,6 +77,7 @@ class RawMaterialCatalogRepository(
             "shelf_life_days": entity.shelf_life_days,
             "critical_stock": entity.critical_stock,
             "is_active": entity.is_active,
+            "comment": entity.comment,
         }
 
 
@@ -89,6 +95,7 @@ class PackagingCatalogRepository(
             unit=model.unit,
             critical_stock=model.critical_stock,
             is_active=model.is_active,
+            comment=model.comment,
             id=model.id,
         )
 
@@ -98,6 +105,7 @@ class PackagingCatalogRepository(
             "unit": entity.unit,
             "critical_stock": entity.critical_stock,
             "is_active": entity.is_active,
+            "comment": entity.comment,
         }
 
 

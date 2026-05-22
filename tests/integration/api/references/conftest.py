@@ -44,20 +44,22 @@ class FakeCustomerService:
         items = list(self._store.values())
         return items if include_inactive else [i for i in items if i.is_active]
 
-    async def create(self, name: str, default_address: str) -> int:
+    async def create(self, name: str, default_address: str, contact: str = "", comment: str = "") -> int:
         if any(c.name == name for c in self._store.values()):
             raise AlreadyExistsError("\1", "name", name)
-        item = Customer(name=name, default_address=default_address, id=self._next_id)
+        item = Customer(name=name, default_address=default_address, contact=contact, comment=comment, id=self._next_id)
         self._store[self._next_id] = item
         self._next_id += 1
         return item.id
 
-    async def update(self, id: int, name: str, default_address: str) -> None:
+    async def update(self, id: int, name: str, default_address: str, contact: str = "", comment: str = "") -> None:
         item = await self.get(id)
         if any(c.name == name and c.id != id for c in self._store.values()):
             raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.default_address = default_address
+        item.contact = contact
+        item.comment = comment
 
     async def deactivate(self, id: int) -> None:
         (await self.get(id)).is_active = False
@@ -138,7 +140,7 @@ class FakeRawMaterialService:
         return items if include_inactive else [i for i in items if i.is_active]
 
     async def create(
-        self, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal
+        self, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal, comment: str = ""
     ) -> int:
         if any(r.name == name for r in self._store.values()):
             raise AlreadyExistsError("\1", "name", name)
@@ -147,6 +149,7 @@ class FakeRawMaterialService:
             unit=unit,
             shelf_life_days=shelf_life_days,
             critical_stock=critical_stock,
+            comment=comment,
             id=self._next_id,
         )
         self._store[self._next_id] = item
@@ -154,7 +157,7 @@ class FakeRawMaterialService:
         return item.id
 
     async def update(
-        self, id: int, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal
+        self, id: int, name: str, unit: str, shelf_life_days: int, critical_stock: Decimal, comment: str = ""
     ) -> None:
         item = await self.get(id)
         if any(r.name == name and r.id != id for r in self._store.values()):
@@ -163,6 +166,7 @@ class FakeRawMaterialService:
         item.unit = unit
         item.shelf_life_days = shelf_life_days
         item.critical_stock = critical_stock
+        item.comment = comment
 
     async def deactivate(self, id: int) -> None:
         (await self.get(id)).is_active = False
@@ -186,23 +190,24 @@ class FakePackagingService:
         items = list(self._store.values())
         return items if include_inactive else [i for i in items if i.is_active]
 
-    async def create(self, name: str, unit: str, critical_stock: int) -> int:
+    async def create(self, name: str, unit: str, critical_stock: int, comment: str = "") -> int:
         if any(p.name == name for p in self._store.values()):
             raise AlreadyExistsError("\1", "name", name)
         item = PackagingCatalog(
-            name=name, unit=unit, critical_stock=critical_stock, id=self._next_id
+            name=name, unit=unit, critical_stock=critical_stock, comment=comment, id=self._next_id
         )
         self._store[self._next_id] = item
         self._next_id += 1
         return item.id
 
-    async def update(self, id: int, name: str, unit: str, critical_stock: int) -> None:
+    async def update(self, id: int, name: str, unit: str, critical_stock: int, comment: str = "") -> None:
         item = await self.get(id)
         if any(p.name == name and p.id != id for p in self._store.values()):
             raise AlreadyExistsError("\1", "name", name)
         item.name = name
         item.unit = unit
         item.critical_stock = critical_stock
+        item.comment = comment
 
     async def deactivate(self, id: int) -> None:
         (await self.get(id)).is_active = False

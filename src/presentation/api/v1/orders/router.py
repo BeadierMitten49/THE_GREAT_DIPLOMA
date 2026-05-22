@@ -9,6 +9,7 @@ from src.presentation.api.v1.orders.schemas import (
     EditOrderRequest,
     OrderItemResponse,
     OrderResponse,
+    ProductReservationResponse,
     ReserveProductRequest,
 )
 from src.presentation.api.v1.orders.service import OrderService
@@ -108,6 +109,15 @@ async def edit_order(
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(id: int, service: OrderService = Depends(get_order_service)):
     await service.delete(id)
+
+
+@router.get("/{id}/reservations", response_model=list[ProductReservationResponse])
+async def get_order_reservations(id: int, service: OrderService = Depends(get_order_service)):
+    reservations = await service.get_reservations(id)
+    return [
+        ProductReservationResponse(id=r.id, order_id=r.order_id, stock_id=r.stock_id, quantity=r.quantity)
+        for r in reservations
+    ]
 
 
 @router.post("/{id}/reservations", response_model=dict, status_code=status.HTTP_201_CREATED)

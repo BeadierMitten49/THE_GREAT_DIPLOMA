@@ -43,6 +43,13 @@ class OrderItemResponse(BaseModel):
     quantity: int
 
 
+class ProductReservationResponse(BaseModel):
+    id: int
+    order_id: int
+    stock_id: int
+    quantity: int
+
+
 class OrderResponse(BaseModel):
     id: int
     number: int

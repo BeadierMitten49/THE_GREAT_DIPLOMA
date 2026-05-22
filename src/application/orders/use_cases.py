@@ -221,6 +221,17 @@ async def release_product_reservation(
     await reservation_repo.delete_by_id(reservation_id)
 
 
+async def get_order_reservations(
+    order_id: int,
+    order_repo: IOrderRepository,
+    reservation_repo: IProductReservationRepository,
+) -> list[ProductReservation]:
+    order = await order_repo.get_by_id(order_id)
+    if order is None:
+        raise NotFoundError("Order", order_id)
+    return await reservation_repo.get_by_order(order_id)
+
+
 async def release_order_reservations(
     order_id: int,
     order_repo: IOrderRepository,

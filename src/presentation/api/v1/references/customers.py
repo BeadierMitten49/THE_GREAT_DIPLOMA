@@ -18,6 +18,8 @@ def _to_response(entity) -> CustomerResponse:
         name=entity.name,
         default_address=entity.default_address,
         is_active=entity.is_active,
+        contact=entity.contact,
+        comment=entity.comment,
     )
 
 
@@ -39,7 +41,7 @@ async def create_customer(
     body: CreateCustomerRequest,
     service: CustomerService = Depends(get_customer_service),
 ):
-    id = await service.create(body.name, body.default_address)
+    id = await service.create(body.name, body.default_address, body.contact, body.comment)
     return {"id": id}
 
 
@@ -49,7 +51,7 @@ async def update_customer(
     body: UpdateCustomerRequest,
     service: CustomerService = Depends(get_customer_service),
 ):
-    await service.update(id, body.name, body.default_address)
+    await service.update(id, body.name, body.default_address, body.contact, body.comment)
     return _to_response(await service.get(id))
 
 

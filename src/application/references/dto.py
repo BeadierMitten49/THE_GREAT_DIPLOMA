@@ -6,12 +6,16 @@ from decimal import Decimal
 class CreateCustomerDTO:
     name: str
     default_address: str
+    contact: str = ""
+    comment: str = ""
 
 
 @dataclass(frozen=True)
 class UpdateCustomerDTO:
     name: str
     default_address: str
+    contact: str = ""
+    comment: str = ""
 
 
 @dataclass(frozen=True)
@@ -43,6 +47,7 @@ class CreateRawMaterialDTO:
     unit: str
     shelf_life_days: int
     critical_stock: Decimal
+    comment: str = ""
 
 
 @dataclass(frozen=True)
@@ -51,6 +56,7 @@ class UpdateRawMaterialDTO:
     unit: str
     shelf_life_days: int
     critical_stock: Decimal
+    comment: str = ""
 
 
 @dataclass(frozen=True)
@@ -58,6 +64,7 @@ class CreatePackagingDTO:
     name: str
     unit: str
     critical_stock: int
+    comment: str = ""
 
 
 @dataclass(frozen=True)
@@ -65,3 +72,4 @@ class UpdatePackagingDTO:
     name: str
     unit: str
     critical_stock: int
+    comment: str = ""

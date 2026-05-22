@@ -20,6 +20,7 @@ def _to_response(entity) -> RawMaterialResponse:
         shelf_life_days=entity.shelf_life_days,
         critical_stock=entity.critical_stock,
         is_active=entity.is_active,
+        comment=entity.comment,
     )
 
 
@@ -41,7 +42,7 @@ async def create_raw_material(
     body: CreateRawMaterialRequest,
     service: RawMaterialService = Depends(get_raw_material_service),
 ):
-    id = await service.create(body.name, body.unit, body.shelf_life_days, body.critical_stock)
+    id = await service.create(body.name, body.unit, body.shelf_life_days, body.critical_stock, body.comment)
     return {"id": id}
 
 
@@ -51,7 +52,7 @@ async def update_raw_material(
     body: UpdateRawMaterialRequest,
     service: RawMaterialService = Depends(get_raw_material_service),
 ):
-    await service.update(id, body.name, body.unit, body.shelf_life_days, body.critical_stock)
+    await service.update(id, body.name, body.unit, body.shelf_life_days, body.critical_stock, body.comment)
     return _to_response(await service.get(id))
 
 

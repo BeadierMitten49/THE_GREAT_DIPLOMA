@@ -10,6 +10,7 @@ from src.application.orders.use_cases import (
     edit_order,
     get_order,
     get_order_items,
+    get_order_reservations,
     get_orders,
     release_order_reservations,
     release_product_reservation,
@@ -91,6 +92,9 @@ class OrderService:
 
     async def delete(self, order_id: int) -> None:
         await delete_order(order_id, self._order_repo, self._reservation_repo)
+
+    async def get_reservations(self, order_id: int) -> list[ProductReservation]:
+        return await get_order_reservations(order_id, self._order_repo, self._reservation_repo)
 
     async def reserve(self, order_id: int, stock_id: int, quantity: int) -> int:
         return await reserve_product_for_order(
