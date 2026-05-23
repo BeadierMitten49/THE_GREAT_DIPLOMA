@@ -193,37 +193,59 @@ async def complete_task(
 async def close_task(
     task_id: int,
     task_repo: IProductionTaskRepository,
-    completion_repo: ITaskCompletionRepository | None = None,
-    product_stock_repo: IProductStockRepository | None = None,
+    completion_repo: ITaskCompletionRepository,
+    product_stock_repo: IProductStockRepository,
+    raw_material_stock_repo: IRawMaterialStockRepository,
     product_reservation_repo: IProductReservationRepository | None = None,
 ) -> None:
     task = await get_task(task_id, task_repo)
     task.close()
     await task_repo.save(task)
 
+    # ── Списание сырья по фактическому расходу ──
+    completion = await completion_repo.get_by_task(task_id)
+    if completion is not None:
+        consumptions = await completion_repo.get_consumptions(completion.id)
+        for cons in consumptions:
+            if cons.actual_qty <= 0:
+                continue
+            batches = await raw_material_stock_repo.get_by_raw_material(cons.raw_material_id)
+            batches.sort(key=lambda b: b.expiry_date)
+            remaining = cons.actual_qty
+            for batch in batches:
+                if remaining <= 0:
+                    break
+                can_take = min(batch.quantity, remaining)
+                if can_take <= 0:
+                    continue
+                batch.write_off(can_take)
+                await raw_material_stock_repo.save(batch)
+                remaining -= can_take
+
+    # ── Добавление продукции на склад ──
+    quantity = completion.actual_quantity if completion else task.quantity
+    today = date.today()
+    last_batch = await product_stock_repo.get_last_batch_number(today.year)
+    comment = f"Произведено по задаче #{task_id}"
+    if task.order_id is not None:
+        comment += f" для заказа #{task.order_id}"
+    stock = ProductStock(
+        product_id=task.product_id,
+        quantity=quantity,
+        batch_number=last_batch + 1,
+        batch_year=today.year,
+        arrival_date=today,
+        expiry_date=date(today.year, 12, 31),
+        comment=comment,
+    )
+    await product_stock_repo.save(stock)
+
+    # ── Резерв продукции под заказ (только order_task) ──
     if (
         task.task_type == TaskType.order_task
         and task.order_id is not None
-        and completion_repo is not None
-        and product_stock_repo is not None
         and product_reservation_repo is not None
     ):
-        completion = await completion_repo.get_by_task(task_id)
-        quantity = completion.actual_quantity if completion else task.quantity
-
-        today = date.today()
-        last_batch = await product_stock_repo.get_last_batch_number(today.year)
-        stock = ProductStock(
-            product_id=task.product_id,
-            quantity=quantity,
-            batch_number=last_batch + 1,
-            batch_year=today.year,
-            arrival_date=today,
-            expiry_date=date(today.year, 12, 31),
-            comment=f"Произведено по задаче #{task_id} для заказа #{task.order_id}",
-        )
-        await product_stock_repo.save(stock)
-
         await product_reservation_repo.save(
             ProductReservation(order_id=task.order_id, stock_id=stock.id, quantity=quantity)
         )

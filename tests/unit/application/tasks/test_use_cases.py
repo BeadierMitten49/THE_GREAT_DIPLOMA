@@ -24,6 +24,7 @@ from src.domain.tasks.value_objects import TaskStatus, TaskType
 from tests.unit.application.tasks.conftest import (
     FakeProductionTaskRepository,
     FakeProductRepository,
+    FakeProductStockRepository,
     FakeRawMaterialReservationRepository,
     FakeRawMaterialStockRepository,
     FakeTaskCompletionRepository,
@@ -438,11 +439,13 @@ class TestCompleteTask:
 
 
 class TestCloseTask:
-    async def test_sets_closed(
+    async def test_sets_closed_and_creates_product_stock(
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
         reservation_repo: FakeRawMaterialReservationRepository,
+        stock_repo: FakeRawMaterialStockRepository,
+        product_stock_repo: FakeProductStockRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
@@ -452,20 +455,53 @@ class TestCloseTask:
             consumptions=[ConsumptionInputDTO(raw_material_id=1, actual_qty=Decimal("45"))],
         )
         await complete_task(dto, task_repo, product_repo, completion_repo, reservation_repo)
-        await close_task(saved_task.id, task_repo)
+        await close_task(
+            saved_task.id, task_repo,
+            completion_repo=completion_repo,
+            product_stock_repo=product_stock_repo,
+            raw_material_stock_repo=stock_repo,
+        )
         task = await task_repo.get_by_id(saved_task.id)
         assert task.status == TaskStatus.closed
+        # product stock created
+        ps = await product_stock_repo.get_all()
+        assert len(ps) == 1
+        assert ps[0].quantity == 90
+        # raw material written off
+        rm_batches = await stock_repo.get_by_raw_material(1)
+        assert rm_batches[0].quantity == Decimal("55")  # 100 - 45
 
-    async def test_not_found_raises(self, task_repo: FakeProductionTaskRepository) -> None:
+    async def test_not_found_raises(
+        self,
+        task_repo: FakeProductionTaskRepository,
+        completion_repo: FakeTaskCompletionRepository,
+        product_stock_repo: FakeProductStockRepository,
+        stock_repo: FakeRawMaterialStockRepository,
+    ) -> None:
         with pytest.raises(NotFoundError):
-            await close_task(999, task_repo)
+            await close_task(
+                999, task_repo,
+                completion_repo=completion_repo,
+                product_stock_repo=product_stock_repo,
+                raw_material_stock_repo=stock_repo,
+            )
 
     async def test_from_in_progress_raises(
-        self, task_repo: FakeProductionTaskRepository, saved_task: ProductionTask
+        self,
+        task_repo: FakeProductionTaskRepository,
+        completion_repo: FakeTaskCompletionRepository,
+        product_stock_repo: FakeProductStockRepository,
+        stock_repo: FakeRawMaterialStockRepository,
+        saved_task: ProductionTask,
     ) -> None:
         await start_task(saved_task.id, task_repo)
         with pytest.raises(InvalidFieldError):
-            await close_task(saved_task.id, task_repo)
+            await close_task(
+                saved_task.id, task_repo,
+                completion_repo=completion_repo,
+                product_stock_repo=product_stock_repo,
+                raw_material_stock_repo=stock_repo,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -490,6 +526,8 @@ class TestReassignTask:
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
         reservation_repo: FakeRawMaterialReservationRepository,
+        stock_repo: FakeRawMaterialStockRepository,
+        product_stock_repo: FakeProductStockRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
@@ -499,7 +537,12 @@ class TestReassignTask:
             consumptions=[ConsumptionInputDTO(raw_material_id=1, actual_qty=Decimal("45"))],
         )
         await complete_task(dto, task_repo, product_repo, completion_repo, reservation_repo)
-        await close_task(saved_task.id, task_repo)
+        await close_task(
+            saved_task.id, task_repo,
+            completion_repo=completion_repo,
+            product_stock_repo=product_stock_repo,
+            raw_material_stock_repo=stock_repo,
+        )
         with pytest.raises(InvalidFieldError):
             await reassign_task(saved_task.id, 99, task_repo)
 

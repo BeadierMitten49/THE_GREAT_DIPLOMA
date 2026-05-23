@@ -56,3 +56,41 @@ class TaskResponse(BaseModel):
 class CreateTaskResponse(BaseModel):
     id: int
     insufficient_materials: list[int]
+
+
+class TaskStopInfo(BaseModel):
+    id: int
+    reason: str
+    stopped_at: datetime
+    resumed_at: datetime | None
+
+
+class TaskCompletionConsumptionInfo(BaseModel):
+    raw_material_id: int
+    raw_material_name: str
+    planned_qty: Decimal
+    actual_qty: Decimal
+    waste_qty: Decimal | None
+
+
+class TaskCompletionInfo(BaseModel):
+    actual_quantity: int
+    comment: str | None
+    consumptions: list[TaskCompletionConsumptionInfo]
+
+
+class RawMaterialReservationInfo(BaseModel):
+    id: int
+    stock_id: int
+    raw_material_name: str
+    quantity: Decimal
+    batch_label: str
+
+
+class TaskDrawerResponse(BaseModel):
+    task: TaskResponse
+    product_name: str
+    executor_name: str
+    stops: list[TaskStopInfo]
+    completion: TaskCompletionInfo | None
+    reservations: list[RawMaterialReservationInfo]

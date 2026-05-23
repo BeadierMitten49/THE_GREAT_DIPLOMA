@@ -11,9 +11,14 @@ from src.presentation.api.v1.tasks.schemas import (
     CompleteTaskRequest,
     CreateTaskRequest,
     CreateTaskResponse,
+    RawMaterialReservationInfo,
     ReassignTaskRequest,
     StopTaskRequest,
+    TaskCompletionConsumptionInfo,
+    TaskCompletionInfo,
+    TaskDrawerResponse,
     TaskResponse,
+    TaskStopInfo,
 )
 from src.presentation.api.v1.tasks.service import ProductionTaskService
 
@@ -59,6 +64,30 @@ async def get_task(
 ):
     task = await service.get(id)
     return _task_response(task)
+
+
+@router.get("/{id}/drawer", response_model=TaskDrawerResponse, dependencies=[director_or_production])
+async def get_task_drawer(
+    id: int,
+    service: ProductionTaskService = Depends(get_task_service),
+):
+    data = await service.get_drawer_data(id)
+    task_resp = _task_response(data["task"])
+    completion_resp = None
+    if data["completion"] is not None:
+        completion_resp = TaskCompletionInfo(
+            actual_quantity=data["completion"]["actual_quantity"],
+            comment=data["completion"]["comment"],
+            consumptions=[TaskCompletionConsumptionInfo(**c) for c in data["completion"]["consumptions"]],
+        )
+    return TaskDrawerResponse(
+        task=task_resp,
+        product_name=data["product_name"],
+        executor_name=data["executor_name"],
+        stops=[TaskStopInfo(**s) for s in data["stops"]],
+        completion=completion_resp,
+        reservations=[RawMaterialReservationInfo(**r) for r in data["reservations"]],
+    )
 
 
 @router.post("", response_model=CreateTaskResponse, status_code=status.HTTP_201_CREATED,

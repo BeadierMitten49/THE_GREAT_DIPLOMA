@@ -12,7 +12,7 @@ from src.domain.tasks.entities import (
     TaskStop,
 )
 from src.domain.tasks.value_objects import TaskStatus, TaskType
-from src.domain.warehouse.entities import RawMaterialStock
+from src.domain.warehouse.entities import ProductStock, RawMaterialStock
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +170,32 @@ class FakeRawMaterialStockRepository:
         return [b for b in self._store.values() if b.raw_material_id == raw_material_id]
 
 
+class FakeProductStockRepository:
+    def __init__(self) -> None:
+        self._store: dict[int, ProductStock] = {}
+        self._next_id = 1
+
+    async def get_by_id(self, id: int) -> ProductStock | None:
+        return self._store.get(id)
+
+    async def save(self, entity: ProductStock) -> int:
+        if entity.id is None:
+            entity.id = self._next_id
+            self._next_id += 1
+        self._store[entity.id] = entity
+        return entity.id
+
+    async def get_all(self) -> list[ProductStock]:
+        return list(self._store.values())
+
+    async def get_by_product(self, product_id: int) -> list[ProductStock]:
+        return [s for s in self._store.values() if s.product_id == product_id]
+
+    async def get_last_batch_number(self, year: int) -> int:
+        nums = [s.batch_number for s in self._store.values() if s.batch_year == year]
+        return max(nums) if nums else 0
+
+
 class FakeProductRepository:
     def __init__(self, product: Product) -> None:
         self._product = product
@@ -261,6 +287,11 @@ def stock_repo() -> FakeRawMaterialStockRepository:
     return FakeRawMaterialStockRepository(
         batches=[_make_stock(rm_id=1, qty="100")]
     )
+
+
+@pytest.fixture
+def product_stock_repo() -> FakeProductStockRepository:
+    return FakeProductStockRepository()
 
 
 @pytest.fixture

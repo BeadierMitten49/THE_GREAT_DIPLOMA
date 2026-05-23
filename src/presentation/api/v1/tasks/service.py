@@ -17,8 +17,9 @@ from src.application.tasks.use_cases import (
 )
 from src.domain.tasks.entities import ProductionTask
 from src.domain.tasks.value_objects import TaskStatus, TaskType
+from src.infrastructure.db.repositories.auth import UserRepository
 from src.infrastructure.db.repositories.orders import ProductReservationRepository
-from src.infrastructure.db.repositories.references import ProductRepository
+from src.infrastructure.db.repositories.references import ProductRepository, RawMaterialCatalogRepository
 from src.infrastructure.db.repositories.tasks import (
     ProductionTaskRepository,
     RawMaterialReservationRepository,
@@ -38,6 +39,8 @@ class ProductionTaskService:
         self._product_repo = ProductRepository(session)
         self._product_stock_repo = ProductStockRepository(session)
         self._product_reservation_repo = ProductReservationRepository(session)
+        self._user_repo = UserRepository(session)
+        self._rm_catalog_repo = RawMaterialCatalogRepository(session)
 
     async def get(self, task_id: int) -> ProductionTask:
         return await get_task(task_id, self._task_repo)
@@ -91,6 +94,7 @@ class ProductionTaskService:
             task_id, self._task_repo,
             completion_repo=self._completion_repo,
             product_stock_repo=self._product_stock_repo,
+            raw_material_stock_repo=self._stock_repo,
             product_reservation_repo=self._product_reservation_repo,
         )
 
@@ -99,3 +103,76 @@ class ProductionTaskService:
 
     async def delete(self, task_id: int) -> None:
         await delete_task(task_id, self._task_repo, self._reservation_repo)
+
+    async def get_product_name(self, product_id: int) -> str:
+        product = await self._product_repo.get_by_id(product_id)
+        return product.name if product else f"Продукт #{product_id}"
+
+    async def get_executor_name(self, executor_id: int) -> str:
+        user = await self._user_repo.get_by_id(executor_id)
+        return user.full_name if user else f"#{executor_id}"
+
+    async def get_drawer_data(self, task_id: int) -> dict:
+        task = await self.get(task_id)
+
+        product_name = await self.get_product_name(task.product_id)
+        executor_name = await self.get_executor_name(task.executor_id)
+
+        stops_raw = await self._stop_repo.get_by_task(task_id)
+        stops = [
+            {
+                "id": s.id,
+                "reason": s.reason,
+                "stopped_at": s.stopped_at,
+                "resumed_at": s.resumed_at,
+            }
+            for s in stops_raw
+        ]
+
+        completion_data = None
+        completion = await self._completion_repo.get_by_task(task_id)
+        if completion is not None:
+            consumptions_raw = await self._completion_repo.get_consumptions(completion.id)
+            consumptions = []
+            for c in consumptions_raw:
+                rm = await self._rm_catalog_repo.get_by_id(c.raw_material_id)
+                consumptions.append({
+                    "raw_material_id": c.raw_material_id,
+                    "raw_material_name": rm.name if rm else f"#{c.raw_material_id}",
+                    "planned_qty": c.planned_qty,
+                    "actual_qty": c.actual_qty,
+                    "waste_qty": c.waste_qty,
+                })
+            completion_data = {
+                "actual_quantity": completion.actual_quantity,
+                "comment": completion.comment,
+                "consumptions": consumptions,
+            }
+
+        reservations_raw = await self._reservation_repo.get_by_task(task_id)
+        reservations = []
+        for r in reservations_raw:
+            stock = await self._stock_repo.get_by_id(r.stock_id)
+            if stock is not None:
+                rm = await self._rm_catalog_repo.get_by_id(stock.raw_material_id)
+                rm_name = rm.name if rm else f"#{stock.raw_material_id}"
+                batch_label = f"С-{stock.arrival_date.year}-{stock.id:03d}"
+            else:
+                rm_name = "?"
+                batch_label = "?"
+            reservations.append({
+                "id": r.id,
+                "stock_id": r.stock_id,
+                "raw_material_name": rm_name,
+                "quantity": r.quantity,
+                "batch_label": batch_label,
+            })
+
+        return {
+            "task": task,
+            "product_name": product_name,
+            "executor_name": executor_name,
+            "stops": stops,
+            "completion": completion_data,
+            "reservations": reservations,
+        }
