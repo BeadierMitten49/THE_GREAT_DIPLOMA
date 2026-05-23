@@ -9,6 +9,9 @@ from src.domain.orders.interfaces import (
     IProductReservationRepository,
 )
 from src.domain.orders.value_objects import OrderStatus
+from src.domain.tasks.entities import ProductionTask
+from src.domain.tasks.interfaces import IProductionTaskRepository
+from src.domain.tasks.value_objects import TaskStatus
 from src.domain.warehouse.entities import ProductStock
 from src.domain.warehouse.interfaces import IProductStockRepository
 
@@ -128,6 +131,34 @@ class FakeProductStockRepository(IProductStockRepository):
         return max(numbers) if numbers else 0
 
 
+class FakeProductionTaskRepository(IProductionTaskRepository):
+    def __init__(self) -> None:
+        self._store: dict[int, ProductionTask] = {}
+        self._next_id = 1
+
+    async def get_by_id(self, id: int) -> ProductionTask | None:
+        return self._store.get(id)
+
+    async def get_all(self, include_inactive: bool = False) -> list[ProductionTask]:
+        return [t for t in self._store.values() if include_inactive or t.is_active]
+
+    async def save(self, entity: ProductionTask) -> int:
+        if entity.id is None:
+            entity.id = self._next_id
+            self._next_id += 1
+        self._store[entity.id] = entity
+        return entity.id
+
+    async def get_by_status(self, status: TaskStatus) -> list[ProductionTask]:
+        return [t for t in self._store.values() if t.status == status]
+
+    async def get_by_executor(self, executor_id: int) -> list[ProductionTask]:
+        return [t for t in self._store.values() if t.executor_id == executor_id]
+
+    async def get_by_order(self, order_id: int) -> list[ProductionTask]:
+        return [t for t in self._store.values() if t.order_id == order_id]
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -151,6 +182,11 @@ def reservation_repo() -> FakeProductReservationRepository:
 @pytest.fixture
 def stock_repo() -> FakeProductStockRepository:
     return FakeProductStockRepository()
+
+
+@pytest.fixture
+def task_repo() -> FakeProductionTaskRepository:
+    return FakeProductionTaskRepository()
 
 
 @pytest.fixture

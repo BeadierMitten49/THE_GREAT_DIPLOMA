@@ -1,0 +1,970 @@
+@startuml "АИС Ярко — Class Diagram"
+
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 11
+
+title АИС «Ярко» — Диаграмма классов
+
+' ══════════════════════════════════════════════
+'  DOMAIN LAYER
+' ══════════════════════════════════════════════
+
+package "domain" <<Frame>> #FEFCE8 {
+
+  ' ── Shared ──
+  package "shared" {
+    class DomainError {
+    }
+    class InvalidFieldError {
+      +field: str
+      +message: str
+    }
+    DomainError <|-- InvalidFieldError
+
+    abstract class "IRepository<T>" as IRepository {
+      {abstract} +get_by_id(id: int): T | None
+      {abstract} +save(entity: T): int
+    }
+    abstract class "ISoftDeleteRepository<T>" as ISoftDeleteRepository {
+      {abstract} +get_all(include_inactive: bool): list[T]
+    }
+    abstract class "IPlainRepository<T>" as IPlainRepository {
+      {abstract} +get_all(): list[T]
+    }
+    IRepository <|-- ISoftDeleteRepository
+    IRepository <|-- IPlainRepository
+  }
+
+  ' ── Value Objects ──
+  package "value_objects" {
+    enum Role <<StrEnum>> {
+      director
+      production
+      warehouse
+      delivery
+    }
+    enum OrderStatus <<StrEnum>> {
+      created
+      production
+      assembly
+      delivery
+      completed
+    }
+    enum TaskType <<StrEnum>> {
+      order_task
+      stock_task
+    }
+    enum TaskStatus <<StrEnum>> {
+      created
+      in_progress
+      stopped
+      completed
+      closed
+    }
+    enum DeliveryStatus <<StrEnum>> {
+      pending
+      picked_up
+      in_transit
+      completed
+      cancelled
+    }
+  }
+
+  ' ── Auth ──
+  package "auth" {
+    class User <<dataclass>> {
+      +username: str
+      +full_name: str
+      +roles: list[Role]
+      +is_active: bool
+      +telegram_username: str | None
+      +telegram_id: int | None
+      +id: int | None
+      --
+      +has_role(role): bool
+      +add_role(role): void
+      +remove_role(role): void
+      +deactivate(): void
+      +activate(): void
+      +set_telegram_username(username): void
+      +set_telegram_id(telegram_id): void
+    }
+    User --> Role
+
+    abstract class IUserRepository {
+      {abstract} +get_by_username(username): User | None
+      {abstract} +exists_by_username(username, exclude_id): bool
+    }
+    ISoftDeleteRepository <|-- IUserRepository
+  }
+
+  ' ── References ──
+  package "references" {
+    class RecipeLine <<dataclass>> {
+      +raw_material_id: int
+      +consumption_per_unit: Decimal
+      +waste_percentage: Decimal
+      +id: int | None
+    }
+
+    class Customer <<dataclass>> {
+      +name: str
+      +default_address: str
+      +is_active: bool
+      +contact: str
+      +comment: str
+      +id: int | None
+      --
+      +update(name, default_address, contact, comment): void
+      +deactivate(): void
+      +activate(): void
+    }
+
+    class Product <<dataclass>> {
+      +name: str
+      +units_per_box: int
+      +shelf_life_days: int
+      +critical_stock: int
+      +is_active: bool
+      +recipe: list[RecipeLine]
+      +id: int | None
+      --
+      +update(name, units_per_box, shelf_life_days, critical_stock): void
+      +set_recipe(lines): void
+      +deactivate(): void
+      +activate(): void
+    }
+    Product "1" *-- "0..*" RecipeLine : recipe
+
+    class RawMaterialCatalog <<dataclass>> {
+      +name: str
+      +unit: str
+      +shelf_life_days: int
+      +critical_stock: Decimal
+      +is_active: bool
+      +comment: str
+      +id: int | None
+      --
+      +update(name, unit, shelf_life_days, critical_stock, comment): void
+      +deactivate(): void
+      +activate(): void
+    }
+
+    class PackagingCatalog <<dataclass>> {
+      +name: str
+      +unit: str
+      +critical_stock: int
+      +is_active: bool
+      +comment: str
+      +id: int | None
+      --
+      +update(name, unit, critical_stock, comment): void
+      +deactivate(): void
+      +activate(): void
+    }
+
+    abstract class ICustomerRepository {
+      {abstract} +exists_by_name(name, exclude_id): bool
+    }
+    abstract class IProductRepository {
+      {abstract} +exists_by_name(name, exclude_id): bool
+    }
+    abstract class IRawMaterialCatalogRepository {
+      {abstract} +exists_by_name(name, exclude_id): bool
+    }
+    abstract class IPackagingCatalogRepository {
+      {abstract} +exists_by_name(name, exclude_id): bool
+    }
+    ISoftDeleteRepository <|-- ICustomerRepository
+    ISoftDeleteRepository <|-- IProductRepository
+    ISoftDeleteRepository <|-- IRawMaterialCatalogRepository
+    ISoftDeleteRepository <|-- IPackagingCatalogRepository
+  }
+
+  ' ── Orders ──
+  package "orders" {
+    class Order <<dataclass>> {
+      +customer_id: int
+      +delivery_address: str
+      +delivery_date: date
+      +status: OrderStatus
+      +id: int | None
+      +number: int | None
+      +delivery_user_id: int | None
+      +comment: str | None
+      +is_active: bool
+      +created_at: datetime | None
+      --
+      +change_status(new_status): void
+      +delete(): void
+    }
+    Order --> OrderStatus
+
+    class OrderItem <<dataclass>> {
+      +order_id: int
+      +product_id: int
+      +quantity: int
+      +id: int | None
+    }
+
+    class ProductReservation <<dataclass>> {
+      +order_id: int
+      +stock_id: int
+      +quantity: int
+      +id: int | None
+    }
+
+    abstract class IOrderRepository {
+      {abstract} +get_by_status(status): list[Order]
+      {abstract} +get_by_customer(customer_id): list[Order]
+      {abstract} +get_last_order_number(): int
+    }
+    abstract class IOrderItemRepository {
+      {abstract} +get_by_order(order_id): list[OrderItem]
+      {abstract} +delete_by_order(order_id): void
+    }
+    abstract class IProductReservationRepository {
+      {abstract} +get_by_order(order_id): list[ProductReservation]
+      {abstract} +get_by_stock(stock_id): list[ProductReservation]
+      {abstract} +delete_by_order(order_id): void
+      {abstract} +delete_by_id(reservation_id): void
+    }
+    ISoftDeleteRepository <|-- IOrderRepository
+    IPlainRepository <|-- IOrderItemRepository
+    IPlainRepository <|-- IProductReservationRepository
+  }
+
+  ' ── Tasks ──
+  package "tasks" {
+    class ProductionTask <<dataclass>> {
+      +product_id: int
+      +quantity: int
+      +executor_id: int
+      +start_date: date
+      +deadline: date
+      +task_type: TaskType
+      +status: TaskStatus
+      +id: int | None
+      +order_id: int | None
+      +comment: str | None
+      +is_active: bool
+      --
+      +start(): void
+      +stop(): void
+      +resume(): void
+      +complete(): void
+      +close(): void
+      +delete(): void
+    }
+    ProductionTask --> TaskType
+    ProductionTask --> TaskStatus
+
+    class TaskStop <<dataclass>> {
+      +task_id: int
+      +reason: str
+      +stopped_at: datetime
+      +id: int | None
+      +resumed_at: datetime | None
+    }
+
+    class TaskCompletion <<dataclass>> {
+      +task_id: int
+      +actual_quantity: int
+      +id: int | None
+      +comment: str | None
+      +created_at: datetime | None
+    }
+
+    class TaskCompletionConsumption <<dataclass>> {
+      +completion_id: int
+      +raw_material_id: int
+      +planned_qty: Decimal
+      +actual_qty: Decimal
+      +id: int | None
+      +waste_qty: Decimal | None
+    }
+
+    class RawMaterialReservation <<dataclass>> {
+      +stock_id: int
+      +task_id: int
+      +quantity: Decimal
+      +id: int | None
+      +created_at: datetime | None
+    }
+
+    abstract class IProductionTaskRepository {
+      {abstract} +get_by_status(status): list[ProductionTask]
+      {abstract} +get_by_executor(executor_id): list[ProductionTask]
+      {abstract} +get_by_order(order_id): list[ProductionTask]
+    }
+    abstract class ITaskStopRepository {
+      {abstract} +get_by_task(task_id): list[TaskStop]
+      {abstract} +get_open_stop(task_id): TaskStop | None
+    }
+    abstract class ITaskCompletionRepository {
+      {abstract} +get_by_task(task_id): TaskCompletion | None
+      {abstract} +get_consumptions(completion_id): list[TaskCompletionConsumption]
+      {abstract} +save_consumption(consumption): int
+    }
+    abstract class IRawMaterialReservationRepository {
+      {abstract} +get_by_task(task_id): list[RawMaterialReservation]
+      {abstract} +get_by_stock(stock_id): list[RawMaterialReservation]
+      {abstract} +delete_by_task(task_id): void
+    }
+    ISoftDeleteRepository <|-- IProductionTaskRepository
+    IPlainRepository <|-- ITaskStopRepository
+    IPlainRepository <|-- ITaskCompletionRepository
+    IPlainRepository <|-- IRawMaterialReservationRepository
+  }
+
+  ' ── Warehouse ──
+  package "warehouse" {
+    class RawMaterialStock <<dataclass>> {
+      +raw_material_id: int
+      +quantity: Decimal
+      +arrival_date: date
+      +expiry_date: date
+      +id: int | None
+      +comment: str | None
+      --
+      +write_off(amount): void
+      +adjust(new_quantity, comment): void
+    }
+
+    class PackagingStock <<dataclass>> {
+      +packaging_id: int
+      +quantity: int
+      +id: int | None
+      +comment: str | None
+      --
+      +write_off(amount): void
+    }
+
+    class ProductStock <<dataclass>> {
+      +product_id: int
+      +quantity: int
+      +batch_number: int
+      +batch_year: int
+      +arrival_date: date
+      +expiry_date: date
+      +id: int | None
+      +comment: str | None
+      --
+      +adjust(new_quantity, comment): void
+      +write_off(amount): void
+    }
+
+    abstract class IRawMaterialStockRepository {
+      {abstract} +get_by_raw_material(raw_material_id): list[RawMaterialStock]
+    }
+    abstract class IPackagingStockRepository {
+      {abstract} +get_by_packaging(packaging_id): list[PackagingStock]
+    }
+    abstract class IProductStockRepository {
+      {abstract} +get_by_product(product_id): list[ProductStock]
+      {abstract} +get_last_batch_number(year): int
+    }
+    IPlainRepository <|-- IRawMaterialStockRepository
+    IPlainRepository <|-- IPackagingStockRepository
+    IPlainRepository <|-- IProductStockRepository
+  }
+
+  ' ── Delivery ──
+  package "delivery" {
+    class Delivery <<dataclass>> {
+      +order_id: int
+      +executor_id: int
+      +planned_date: date
+      +status: DeliveryStatus
+      +id: int | None
+      +started_at: datetime | None
+      +completed_at: datetime | None
+      +cancellation_reason: str | None
+      --
+      +pick_up(): void
+      +start(): void
+      +complete(): void
+      +cancel(reason): void
+    }
+    Delivery --> DeliveryStatus
+
+    abstract class IDeliveryRepository {
+      {abstract} +get_by_order(order_id): Delivery | None
+      {abstract} +get_by_executor(executor_id): list[Delivery]
+      {abstract} +get_by_status(status): list[Delivery]
+    }
+    IPlainRepository <|-- IDeliveryRepository
+  }
+}
+
+' ══════════════════════════════════════════════
+'  APPLICATION LAYER
+' ══════════════════════════════════════════════
+
+package "application" <<Frame>> #EBF5FB {
+
+  ' ── Ports (auth-specific interfaces) ──
+  package "ports" {
+    abstract class IUserCredentialRepository {
+      {abstract} +get_hashed_password(user_id): str | None
+      {abstract} +save(user_id, hashed_password): void
+      {abstract} +update_password(user_id, hashed_password): void
+    }
+    abstract class IRefreshTokenRepository {
+      {abstract} +save(user_id, token): void
+      {abstract} +get_by_token(token): RefreshTokenData | None
+      {abstract} +revoke(token): void
+      {abstract} +revoke_all_for_user(user_id): void
+    }
+    abstract class IAuthLogRepository {
+      {abstract} +log_attempt(username, user_id, success): void
+      {abstract} +count_failed_recent(username, window_seconds): int
+    }
+    abstract class IPasswordHasher {
+      {abstract} +hash(password): str
+      {abstract} +verify(password, hashed): bool
+    }
+    abstract class IJWTService {
+      {abstract} +create_access_token(user_id, roles): str
+      {abstract} +decode_access_token(token): dict
+    }
+    abstract class INotificationService {
+      {abstract} +send(user_id, message): void
+    }
+
+    class RefreshTokenData <<frozen>> {
+      +user_id: int
+    }
+  }
+
+  ' ── Exceptions ──
+  package "exceptions" {
+    class NotFoundError {
+      +entity_name: str
+      +entity_id: int
+    }
+    class AlreadyExistsError {
+      +entity_name: str
+      +field: str
+      +value: str
+    }
+    class AuthenticationError
+    class DeactivatedUserError
+    class RateLimitError
+    class InvalidTokenError
+    class InsufficientStockError
+  }
+
+  ' ── DTOs ──
+  package "dto" #F5F5F5 {
+    class CreateUserDTO <<dataclass>>
+    class LoginDTO <<dataclass>>
+    class TokenPairDTO <<dataclass>>
+    class UpdateUserDTO <<dataclass>>
+    class SetUserRolesDTO <<dataclass>>
+    class BindTelegramDTO <<dataclass>>
+    class ResetPasswordDTO <<dataclass>>
+
+    class CreateOrderDTO <<dataclass>>
+    class EditOrderDTO <<dataclass>>
+    class ChangeOrderStatusDTO <<dataclass>>
+
+    class CreateTaskDTO <<dataclass>>
+    class ConsumptionInputDTO <<dataclass>>
+    class CompleteTaskDTO <<dataclass>>
+
+    class CreateDeliveryDTO <<dataclass>>
+
+    class CreateCustomerDTO <<dataclass>>
+    class UpdateCustomerDTO <<dataclass>>
+    class CreateProductDTO <<dataclass>>
+    class UpdateProductDTO <<dataclass>>
+    class RecipeLineDTO <<dataclass>>
+    class CreateRawMaterialDTO <<dataclass>>
+    class UpdateRawMaterialDTO <<dataclass>>
+    class CreatePackagingDTO <<dataclass>>
+    class UpdatePackagingDTO <<dataclass>>
+
+    class RawMaterialStockArrivalDTO <<dataclass>>
+    class RawMaterialStockWriteOffDTO <<dataclass>>
+    class RawMaterialStockAdjustDTO <<dataclass>>
+    class PackagingStockArrivalDTO <<dataclass>>
+    class PackagingStockWriteOffDTO <<dataclass>>
+    class ProductStockArrivalDTO <<dataclass>>
+    class ProductStockAdjustDTO <<dataclass>>
+    class ProductStockWriteOffDTO <<dataclass>>
+  }
+}
+
+' ══════════════════════════════════════════════
+'  INFRASTRUCTURE LAYER
+' ══════════════════════════════════════════════
+
+package "infrastructure" <<Frame>> #FDEDEC {
+
+  ' ── SQLAlchemy Models ──
+  package "db.models" {
+    class Base <<declarative>>
+
+    class UserModel {
+      id, username, full_name,
+      is_active, telegram_username,
+      telegram_id
+    }
+    class UserCredentialModel {
+      id, user_id, hashed_password
+    }
+    class UserRoleModel {
+      id, user_id, role
+    }
+    class AuthLogModel {
+      id, username_attempt, user_id,
+      success, created_at
+    }
+    class RefreshTokenModel {
+      id, user_id, token, is_revoked
+    }
+
+    class CustomerModel {
+      id, name, default_address,
+      is_active, contact, comment
+    }
+    class ProductModel {
+      id, name, units_per_box,
+      shelf_life_days, critical_stock,
+      is_active
+    }
+    class RecipeLineModel {
+      id, product_id, raw_material_id,
+      consumption_per_unit, waste_percentage
+    }
+    class RawMaterialCatalogModel {
+      id, name, unit, shelf_life_days,
+      critical_stock, is_active, comment
+    }
+    class PackagingCatalogModel {
+      id, name, unit, critical_stock,
+      is_active, comment
+    }
+
+    class OrderModel {
+      id, number, customer_id,
+      delivery_address, delivery_date,
+      status, delivery_user_id,
+      comment, is_active, created_at
+    }
+    class OrderItemModel {
+      id, order_id, product_id, quantity
+    }
+    class ProductReservationModel {
+      id, order_id, stock_id, quantity
+    }
+
+    class ProductionTaskModel {
+      id, task_type, product_id,
+      quantity, executor_id, start_date,
+      deadline, status, order_id,
+      comment, is_active, created_at
+    }
+    class TaskStopModel {
+      id, task_id, reason,
+      stopped_at, resumed_at
+    }
+    class TaskCompletionModel {
+      id, task_id, actual_quantity,
+      comment, created_at
+    }
+    class TaskCompletionConsumptionModel {
+      id, completion_id, raw_material_id,
+      planned_qty, actual_qty, waste_qty
+    }
+    class RawMaterialReservationModel {
+      id, stock_id, task_id,
+      quantity, created_at
+    }
+
+    class RawMaterialStockModel {
+      id, raw_material_id, quantity,
+      arrival_date, expiry_date, comment
+    }
+    class PackagingStockModel {
+      id, packaging_id, quantity, comment
+    }
+    class ProductStockModel {
+      id, product_id, quantity,
+      batch_number, batch_year,
+      arrival_date, expiry_date, comment
+    }
+
+    class DeliveryModel {
+      id, order_id, executor_id,
+      planned_date, status, started_at,
+      completed_at, cancellation_reason
+    }
+
+    Base <|-- UserModel
+    Base <|-- UserCredentialModel
+    Base <|-- UserRoleModel
+    Base <|-- AuthLogModel
+    Base <|-- RefreshTokenModel
+    Base <|-- CustomerModel
+    Base <|-- ProductModel
+    Base <|-- RecipeLineModel
+    Base <|-- RawMaterialCatalogModel
+    Base <|-- PackagingCatalogModel
+    Base <|-- OrderModel
+    Base <|-- OrderItemModel
+    Base <|-- ProductReservationModel
+    Base <|-- ProductionTaskModel
+    Base <|-- TaskStopModel
+    Base <|-- TaskCompletionModel
+    Base <|-- TaskCompletionConsumptionModel
+    Base <|-- RawMaterialReservationModel
+    Base <|-- RawMaterialStockModel
+    Base <|-- PackagingStockModel
+    Base <|-- ProductStockModel
+    Base <|-- DeliveryModel
+
+    ProductModel "1" -- "0..*" RecipeLineModel : recipe
+  }
+
+  ' ── Repositories (concrete) ──
+  package "db.repositories" {
+    abstract class "BaseRepository<TEntity, TModel>" as BaseRepository {
+      #_session: AsyncSession
+      #_model_class: type[TModel]
+      --
+      +get_by_id(id): TEntity | None
+      +save(entity): int
+      #{abstract} _to_entity(model): TEntity
+      #{abstract} _to_values(entity): dict
+    }
+    class "BaseSoftDeleteRepository<TEntity, TModel>" as BaseSoftDeleteRepository {
+      +get_all(include_inactive): list[TEntity]
+    }
+    class "BaseCatalogRepository<TEntity, TModel>" as BaseCatalogRepository {
+      +exists_by_name(name, exclude_id): bool
+    }
+    class "BasePlainRepository<TEntity, TModel>" as BasePlainRepository {
+      +get_all(): list[TEntity]
+    }
+
+    BaseRepository <|-- BaseSoftDeleteRepository
+    BaseSoftDeleteRepository <|-- BaseCatalogRepository
+    BaseRepository <|-- BasePlainRepository
+
+    class UserRepository
+    class UserCredentialRepository
+    class RefreshTokenRepository
+    class AuthLogRepository
+    class CustomerRepository
+    class ProductRepository
+    class RawMaterialCatalogRepository
+    class PackagingCatalogRepository
+    class OrderRepository
+    class OrderItemRepository
+    class ProductReservationRepository
+    class ProductionTaskRepository
+    class TaskStopRepository
+    class TaskCompletionRepository
+    class RawMaterialReservationRepository
+    class RawMaterialStockRepository
+    class PackagingStockRepository
+    class ProductStockRepository
+    class DeliveryRepository
+
+    BaseSoftDeleteRepository <|-- UserRepository
+    BaseRepository <|-- UserCredentialRepository
+    BaseRepository <|-- RefreshTokenRepository
+    BaseRepository <|-- AuthLogRepository
+    BaseCatalogRepository <|-- CustomerRepository
+    BaseCatalogRepository <|-- ProductRepository
+    BaseCatalogRepository <|-- RawMaterialCatalogRepository
+    BaseCatalogRepository <|-- PackagingCatalogRepository
+    BaseSoftDeleteRepository <|-- OrderRepository
+    BasePlainRepository <|-- OrderItemRepository
+    BasePlainRepository <|-- ProductReservationRepository
+    BaseSoftDeleteRepository <|-- ProductionTaskRepository
+    BasePlainRepository <|-- TaskStopRepository
+    BasePlainRepository <|-- TaskCompletionRepository
+    BasePlainRepository <|-- RawMaterialReservationRepository
+    BasePlainRepository <|-- RawMaterialStockRepository
+    BasePlainRepository <|-- PackagingStockRepository
+    BasePlainRepository <|-- ProductStockRepository
+    BasePlainRepository <|-- DeliveryRepository
+
+    ' Interface implementations
+    UserRepository ..|> IUserRepository
+    CustomerRepository ..|> ICustomerRepository
+    ProductRepository ..|> IProductRepository
+    RawMaterialCatalogRepository ..|> IRawMaterialCatalogRepository
+    PackagingCatalogRepository ..|> IPackagingCatalogRepository
+    OrderRepository ..|> IOrderRepository
+    OrderItemRepository ..|> IOrderItemRepository
+    ProductReservationRepository ..|> IProductReservationRepository
+    ProductionTaskRepository ..|> IProductionTaskRepository
+    TaskStopRepository ..|> ITaskStopRepository
+    TaskCompletionRepository ..|> ITaskCompletionRepository
+    RawMaterialReservationRepository ..|> IRawMaterialReservationRepository
+    RawMaterialStockRepository ..|> IRawMaterialStockRepository
+    PackagingStockRepository ..|> IPackagingStockRepository
+    ProductStockRepository ..|> IProductStockRepository
+    DeliveryRepository ..|> IDeliveryRepository
+    UserCredentialRepository ..|> IUserCredentialRepository
+    RefreshTokenRepository ..|> IRefreshTokenRepository
+    AuthLogRepository ..|> IAuthLogRepository
+  }
+
+  ' ── Security ──
+  package "security" {
+    class JWTService {
+      +create_access_token(user_id, roles): str
+      +decode_access_token(token): dict
+    }
+    class BcryptPasswordHasher {
+      +hash(password): str
+      +verify(password, hashed): bool
+    }
+    JWTService ..|> IJWTService
+    BcryptPasswordHasher ..|> IPasswordHasher
+  }
+}
+
+' ══════════════════════════════════════════════
+'  PRESENTATION LAYER
+' ══════════════════════════════════════════════
+
+package "presentation" <<Frame>> #E8F8F5 {
+
+  package "api.v1 — Service Classes" {
+    class AuthService {
+      -_user_repo: UserRepository
+      -_cred_repo: UserCredentialRepository
+      -_token_repo: RefreshTokenRepository
+      -_auth_log_repo: AuthLogRepository
+      -_hasher: BcryptPasswordHasher
+      -_jwt: JWTService
+      --
+      +login(username, password): TokenPairDTO
+      +refresh_tokens(refresh_token): TokenPairDTO
+      +logout(refresh_token): void
+    }
+
+    class UserService {
+      -_user_repo: UserRepository
+      -_cred_repo: UserCredentialRepository
+      -_hasher: BcryptPasswordHasher
+      --
+      +create(full_name, password): int
+      +get(id): User
+      +get_all(include_inactive): list[User]
+      +update(id, full_name): void
+      +set_roles(id, roles): void
+      +deactivate(id): void
+      +activate(id): void
+      +bind_telegram(id, telegram_username): void
+      +reset_password(id, old_password, new_password): void
+    }
+
+    class OrderService {
+      -_order_repo: OrderRepository
+      -_item_repo: OrderItemRepository
+      -_reservation_repo: ProductReservationRepository
+      -_stock_repo: ProductStockRepository
+      --
+      +get(order_id): Order
+      +get_all(status, customer_id): list[Order]
+      +get_items(order_id): list[OrderItem]
+      +create(...): int
+      +change_status(order_id, new_status): void
+      +edit(...): void
+      +delete(order_id): void
+      +get_reservations(order_id): list[ProductReservation]
+      +reserve(order_id, stock_id, quantity): int
+      +release_reservation(reservation_id): void
+      +release_all_reservations(order_id): void
+    }
+
+    class ProductionTaskService {
+      -_task_repo: ProductionTaskRepository
+      -_stop_repo: TaskStopRepository
+      -_completion_repo: TaskCompletionRepository
+      -_reservation_repo: RawMaterialReservationRepository
+      -_stock_repo: RawMaterialStockRepository
+      -_product_repo: ProductRepository
+      --
+      +get(task_id): ProductionTask
+      +get_all(status, executor_id): list[ProductionTask]
+      +create(...): tuple[int, list[int]]
+      +start(task_id): void
+      +stop(task_id, reason): void
+      +resume(task_id): void
+      +complete(dto): void
+      +close(task_id): void
+      +reassign(task_id, new_executor_id): void
+      +delete(task_id): void
+    }
+
+    class DeliveryService {
+      -_repo: DeliveryRepository
+      --
+      +get(delivery_id): Delivery
+      +get_all(executor_id, status): list[Delivery]
+      +create(order_id, executor_id, planned_date): int
+      +pick_up(delivery_id): void
+      +start(delivery_id): void
+      +complete(delivery_id): void
+      +cancel(delivery_id, reason): void
+    }
+
+    class CustomerService {
+      -_repo: CustomerRepository
+      --
+      +get(id): Customer
+      +get_all(include_inactive): list[Customer]
+      +create(name, default_address, contact, comment): int
+      +update(id, name, default_address, contact, comment): void
+      +deactivate(id): void
+      +activate(id): void
+    }
+
+    class ProductService {
+      -_repo: ProductRepository
+      --
+      +get(id): Product
+      +get_all(include_inactive): list[Product]
+      +create(name, units_per_box, shelf_life_days, critical_stock): int
+      +update(id, ...): void
+      +set_recipe(id, lines): void
+      +deactivate(id): void
+      +activate(id): void
+    }
+
+    class RawMaterialService {
+      -_repo: RawMaterialCatalogRepository
+      --
+      +get(id): RawMaterialCatalog
+      +get_all(include_inactive): list[RawMaterialCatalog]
+      +create(name, unit, shelf_life_days, critical_stock, comment): int
+      +update(id, ...): void
+      +deactivate(id): void
+      +activate(id): void
+    }
+
+    class PackagingService {
+      -_repo: PackagingCatalogRepository
+      --
+      +get(id): PackagingCatalog
+      +get_all(include_inactive): list[PackagingCatalog]
+      +create(name, unit, critical_stock, comment): int
+      +update(id, ...): void
+      +deactivate(id): void
+      +activate(id): void
+    }
+
+    class RawMaterialStockService {
+      -_repo: RawMaterialStockRepository
+      -_reservation_repo: RawMaterialReservationRepository
+      --
+      +get(id): RawMaterialStock
+      +get_all(): list[RawMaterialStock]
+      +get_by_material(raw_material_id): list[RawMaterialStock]
+      +get_reserved(stock_id): Decimal
+      +arrival(...): int
+      +write_off(stock_id, amount): void
+      +adjust(stock_id, quantity, comment): void
+    }
+
+    class PackagingStockService {
+      -_repo: PackagingStockRepository
+      --
+      +get(id): PackagingStock
+      +get_all(): list[PackagingStock]
+      +get_by_packaging(packaging_id): list[PackagingStock]
+      +arrival(packaging_id, quantity, comment): int
+      +write_off(stock_id, amount): void
+    }
+
+    class ProductStockService {
+      -_repo: ProductStockRepository
+      -_reservation_repo: ProductReservationRepository
+      -_task_repo: ProductionTaskRepository
+      -_completion_repo: TaskCompletionRepository
+      -_product_repo: ProductRepository
+      --
+      +get(id): ProductStock
+      +get_all(): list[ProductStock]
+      +get_by_product(product_id): list[ProductStock]
+      +get_reserved(stock_id): tuple[int, list[int]]
+      +arrival(...): int
+      +adjust(stock_id, quantity, comment): void
+      +get_pending_acceptances(): list[dict]
+      +accept_from_task(task_id): int
+      +write_off(stock_id, amount): void
+    }
+  }
+
+  ' ── Service → Repository dependencies ──
+  AuthService --> UserRepository
+  AuthService --> UserCredentialRepository
+  AuthService --> RefreshTokenRepository
+  AuthService --> AuthLogRepository
+  AuthService --> BcryptPasswordHasher
+  AuthService --> JWTService
+  UserService --> UserRepository
+  UserService --> UserCredentialRepository
+  UserService --> BcryptPasswordHasher
+  OrderService --> OrderRepository
+  OrderService --> OrderItemRepository
+  OrderService --> ProductReservationRepository
+  OrderService --> ProductStockRepository
+  ProductionTaskService --> ProductionTaskRepository
+  ProductionTaskService --> TaskStopRepository
+  ProductionTaskService --> TaskCompletionRepository
+  ProductionTaskService --> RawMaterialReservationRepository
+  ProductionTaskService --> RawMaterialStockRepository
+  ProductionTaskService --> ProductRepository
+  DeliveryService --> DeliveryRepository
+  CustomerService --> CustomerRepository
+  ProductService --> ProductRepository
+  RawMaterialService --> RawMaterialCatalogRepository
+  PackagingService --> PackagingCatalogRepository
+  RawMaterialStockService --> RawMaterialStockRepository
+  RawMaterialStockService --> RawMaterialReservationRepository
+  PackagingStockService --> PackagingStockRepository
+  ProductStockService --> ProductStockRepository
+  ProductStockService --> ProductReservationRepository
+  ProductStockService --> ProductionTaskRepository
+  ProductStockService --> TaskCompletionRepository
+  ProductStockService --> ProductRepository
+}
+
+' ══════════════════════════════════════════════
+'  CROSS-LAYER DOMAIN RELATIONSHIPS
+' ══════════════════════════════════════════════
+
+Order ..> Customer : customer_id →
+OrderItem ..> Product : product_id →
+OrderItem ..> Order : order_id →
+ProductReservation ..> Order : order_id →
+ProductReservation ..> ProductStock : stock_id →
+ProductionTask ..> Product : product_id →
+ProductionTask ..> User : executor_id →
+ProductionTask ..> Order : order_id →
+TaskStop ..> ProductionTask : task_id →
+TaskCompletion ..> ProductionTask : task_id →
+TaskCompletionConsumption ..> TaskCompletion : completion_id →
+TaskCompletionConsumption ..> RawMaterialCatalog : raw_material_id →
+RawMaterialReservation ..> RawMaterialStock : stock_id →
+RawMaterialReservation ..> ProductionTask : task_id →
+RawMaterialStock ..> RawMaterialCatalog : raw_material_id →
+PackagingStock ..> PackagingCatalog : packaging_id →
+ProductStock ..> Product : product_id →
+RecipeLine ..> RawMaterialCatalog : raw_material_id →
+Delivery ..> Order : order_id →
+Delivery ..> User : executor_id →
+
+@enduml

@@ -19,6 +19,8 @@ from src.application.orders.use_cases import (
 from src.domain.orders.entities import Order, OrderItem, ProductReservation
 from src.domain.orders.value_objects import OrderStatus
 from src.domain.shared.exceptions import InvalidFieldError
+from src.domain.tasks.entities import ProductionTask
+from src.domain.tasks.value_objects import TaskStatus, TaskType
 from src.domain.warehouse.entities import ProductStock
 
 pytestmark = pytest.mark.unit
@@ -170,45 +172,75 @@ class TestChangeOrderStatusSimple:
 
 
 class TestChangeOrderStatusToAssembly:
-    async def _setup_order_with_item(self, order_repo, item_repo, quantity: int = 100) -> Order:
+    async def test_created_to_assembly_succeeds_without_tasks(
+        self, order_repo, item_repo, reservation_repo, stock_repo
+    ):
         order = Order(
             customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1), number=1
         )
         await order_repo.save(order)
-        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=quantity))
-        return order
-
-    async def test_succeeds_when_reservations_cover_items(
-        self, order_repo, item_repo, reservation_repo, stock_repo, saved_stock
-    ):
-        order = await self._setup_order_with_item(order_repo, item_repo, quantity=100)
-        await reservation_repo.save(
-            ProductReservation(order_id=order.id, stock_id=saved_stock.id, quantity=100)
-        )
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
         dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.assembly)
         await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
         updated = await order_repo.get_by_id(order.id)
         assert updated.status == OrderStatus.assembly
 
-    async def test_raises_insufficient_when_reservations_not_enough(
-        self, order_repo, item_repo, reservation_repo, stock_repo, saved_stock
+    async def test_production_to_assembly_succeeds_when_all_tasks_closed(
+        self, order_repo, item_repo, reservation_repo, stock_repo, task_repo
     ):
-        order = await self._setup_order_with_item(order_repo, item_repo, quantity=100)
-        await reservation_repo.save(
-            ProductReservation(order_id=order.id, stock_id=saved_stock.id, quantity=50)
+        order = Order(
+            customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1),
+            number=1, status=OrderStatus.production
         )
+        await order_repo.save(order)
+        task = ProductionTask(
+            product_id=1, quantity=100, executor_id=1,
+            start_date=date(2026, 5, 1), deadline=date(2026, 6, 1),
+            task_type=TaskType.order_task, order_id=order.id,
+            status=TaskStatus.closed,
+        )
+        await task_repo.save(task)
         dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.assembly)
-        with pytest.raises(InsufficientStockError) as exc_info:
-            await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
-        assert exc_info.value.product_id == 1
+        await change_order_status(
+            dto, order_repo, item_repo, reservation_repo, stock_repo, task_repo=task_repo
+        )
+        updated = await order_repo.get_by_id(order.id)
+        assert updated.status == OrderStatus.assembly
 
-    async def test_raises_insufficient_when_no_reservations(
-        self, order_repo, item_repo, reservation_repo, stock_repo
+    async def test_production_to_assembly_raises_when_no_tasks(
+        self, order_repo, item_repo, reservation_repo, stock_repo, task_repo
     ):
-        order = await self._setup_order_with_item(order_repo, item_repo, quantity=100)
+        order = Order(
+            customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1),
+            number=1, status=OrderStatus.production
+        )
+        await order_repo.save(order)
         dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.assembly)
-        with pytest.raises(InsufficientStockError):
-            await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
+        with pytest.raises(InvalidFieldError):
+            await change_order_status(
+                dto, order_repo, item_repo, reservation_repo, stock_repo, task_repo=task_repo
+            )
+
+    async def test_production_to_assembly_raises_when_task_not_closed(
+        self, order_repo, item_repo, reservation_repo, stock_repo, task_repo
+    ):
+        order = Order(
+            customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1),
+            number=1, status=OrderStatus.production
+        )
+        await order_repo.save(order)
+        task = ProductionTask(
+            product_id=1, quantity=100, executor_id=1,
+            start_date=date(2026, 5, 1), deadline=date(2026, 6, 1),
+            task_type=TaskType.order_task, order_id=order.id,
+            status=TaskStatus.in_progress,
+        )
+        await task_repo.save(task)
+        dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.assembly)
+        with pytest.raises(InvalidFieldError):
+            await change_order_status(
+                dto, order_repo, item_repo, reservation_repo, stock_repo, task_repo=task_repo
+            )
 
 
 class TestChangeOrderStatusToDelivery:
@@ -236,6 +268,35 @@ class TestChangeOrderStatusToDelivery:
 
         updated_order = await order_repo.get_by_id(order.id)
         assert updated_order.status == OrderStatus.delivery
+
+    async def test_raises_insufficient_when_no_reservations(
+        self, order_repo, item_repo, reservation_repo, stock_repo
+    ):
+        order = Order(
+            customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1),
+            number=1, status=OrderStatus.assembly
+        )
+        await order_repo.save(order)
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
+        dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.delivery)
+        with pytest.raises(InsufficientStockError):
+            await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
+
+    async def test_raises_insufficient_when_partial_reservations(
+        self, order_repo, item_repo, reservation_repo, stock_repo, saved_stock
+    ):
+        order = Order(
+            customer_id=1, delivery_address="a", delivery_date=date(2026, 6, 1),
+            number=1, status=OrderStatus.assembly
+        )
+        await order_repo.save(order)
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
+        await reservation_repo.save(
+            ProductReservation(order_id=order.id, stock_id=saved_stock.id, quantity=50)
+        )
+        dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.delivery)
+        with pytest.raises(InsufficientStockError):
+            await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
 
 
 # ---------------------------------------------------------------------------

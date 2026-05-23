@@ -6,6 +6,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from main import app
+from src.application.shared.exceptions import NotFoundError as SharedNotFoundError
 from src.application.warehouse.exceptions import NotFoundError
 from src.domain.auth.entities import User
 from src.domain.auth.value_objects import Role
@@ -153,6 +154,23 @@ class FakeProductStockService:
         self._store[self._next_id] = stock
         self._next_id += 1
         return stock.id
+
+    async def get_pending_acceptances(self) -> list[dict]:
+        return [
+            {
+                "task_id": 1,
+                "product_id": 1,
+                "product_name": "Молоко 3,2% 1 л",
+                "planned_quantity": 100,
+                "actual_quantity": 95,
+                "completed_at": "2026-05-20T12:00:00",
+            },
+        ]
+
+    async def accept_from_task(self, task_id: int) -> int:
+        if task_id == 999:
+            raise SharedNotFoundError("ProductionTask", task_id)
+        return await self.arrival(1, 100, date.today(), date.today(), f"Task #{task_id}")
 
     async def adjust(self, stock_id: int, quantity: int, comment: str | None) -> None:
         stock = self._store.get(stock_id)

@@ -17,6 +17,7 @@ from src.application.tasks.use_cases import (
 )
 from src.domain.tasks.entities import ProductionTask
 from src.domain.tasks.value_objects import TaskStatus, TaskType
+from src.infrastructure.db.repositories.orders import ProductReservationRepository
 from src.infrastructure.db.repositories.references import ProductRepository
 from src.infrastructure.db.repositories.tasks import (
     ProductionTaskRepository,
@@ -24,7 +25,7 @@ from src.infrastructure.db.repositories.tasks import (
     TaskCompletionRepository,
     TaskStopRepository,
 )
-from src.infrastructure.db.repositories.warehouse import RawMaterialStockRepository
+from src.infrastructure.db.repositories.warehouse import ProductStockRepository, RawMaterialStockRepository
 
 
 class ProductionTaskService:
@@ -35,6 +36,8 @@ class ProductionTaskService:
         self._reservation_repo = RawMaterialReservationRepository(session)
         self._stock_repo = RawMaterialStockRepository(session)
         self._product_repo = ProductRepository(session)
+        self._product_stock_repo = ProductStockRepository(session)
+        self._product_reservation_repo = ProductReservationRepository(session)
 
     async def get(self, task_id: int) -> ProductionTask:
         return await get_task(task_id, self._task_repo)
@@ -84,7 +87,12 @@ class ProductionTaskService:
         await complete_task(dto, self._task_repo, self._product_repo, self._completion_repo, self._reservation_repo)
 
     async def close(self, task_id: int) -> None:
-        await close_task(task_id, self._task_repo)
+        await close_task(
+            task_id, self._task_repo,
+            completion_repo=self._completion_repo,
+            product_stock_repo=self._product_stock_repo,
+            product_reservation_repo=self._product_reservation_repo,
+        )
 
     async def reassign(self, task_id: int, new_executor_id: int) -> None:
         await reassign_task(task_id, new_executor_id, self._task_repo)

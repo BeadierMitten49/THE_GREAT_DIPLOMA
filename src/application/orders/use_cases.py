@@ -1,3 +1,5 @@
+from datetime import date
+
 from src.application.orders.dto import ChangeOrderStatusDTO, CreateOrderDTO, EditOrderDTO
 from src.application.orders.exceptions import InsufficientStockError, NotFoundError
 from src.domain.orders.entities import Order, OrderItem, ProductReservation
@@ -8,6 +10,8 @@ from src.domain.orders.interfaces import (
 )
 from src.domain.orders.value_objects import OrderStatus
 from src.domain.shared.exceptions import InvalidFieldError
+from src.domain.tasks.interfaces import IProductionTaskRepository
+from src.domain.tasks.value_objects import TaskStatus
 from src.domain.warehouse.interfaces import IProductStockRepository
 
 _NOT_EDITABLE = {OrderStatus.delivery, OrderStatus.completed}
@@ -29,12 +33,20 @@ async def get_orders(
     repo: IOrderRepository,
     status: OrderStatus | None = None,
     customer_id: int | None = None,
+    delivery_date_from: date | None = None,
+    delivery_date_to: date | None = None,
 ) -> list[Order]:
     if status is not None:
-        return await repo.get_by_status(status)
-    if customer_id is not None:
-        return await repo.get_by_customer(customer_id)
-    return await repo.get_all()
+        orders = await repo.get_by_status(status)
+    elif customer_id is not None:
+        orders = await repo.get_by_customer(customer_id)
+    else:
+        orders = await repo.get_all()
+    if delivery_date_from is not None:
+        orders = [o for o in orders if o.delivery_date >= delivery_date_from]
+    if delivery_date_to is not None:
+        orders = [o for o in orders if o.delivery_date <= delivery_date_to]
+    return orders
 
 
 async def get_order_items(
@@ -81,21 +93,43 @@ async def change_order_status(
     item_repo: IOrderItemRepository,
     reservation_repo: IProductReservationRepository,
     stock_repo: IProductStockRepository,
+    task_repo: IProductionTaskRepository | None = None,
 ) -> None:
     order = await order_repo.get_by_id(dto.order_id)
     if order is None:
         raise NotFoundError("Order", dto.order_id)
 
-    if dto.new_status == OrderStatus.assembly:
+    if dto.new_status == OrderStatus.assembly and order.status == OrderStatus.production:
+        await _validate_tasks_closed(order.id, task_repo)
+
+    if dto.new_status == OrderStatus.delivery:
         await _validate_reservations_cover_items(
             order.id, item_repo, reservation_repo, stock_repo
         )
-
-    if dto.new_status == OrderStatus.delivery:
         await _ship_stock(order.id, reservation_repo, stock_repo)
 
     order.change_status(dto.new_status)
     await order_repo.save(order)
+
+
+async def _validate_tasks_closed(
+    order_id: int,
+    task_repo: IProductionTaskRepository | None,
+) -> None:
+    if task_repo is None:
+        return
+    tasks = await task_repo.get_by_order(order_id)
+    if not tasks:
+        raise InvalidFieldError(
+            "status",
+            "нельзя перевести в сборку: нет производственных задач для заказа",
+        )
+    not_closed = [t for t in tasks if t.status != TaskStatus.closed]
+    if not_closed:
+        raise InvalidFieldError(
+            "status",
+            "нельзя перевести в сборку: не все производственные задачи закрыты",
+        )
 
 
 async def _validate_reservations_cover_items(

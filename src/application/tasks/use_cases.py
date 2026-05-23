@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from src.application.shared.exceptions import NotFoundError
 from src.application.tasks.dto import CompleteTaskDTO, CreateTaskDTO
+from src.domain.orders.entities import ProductReservation
+from src.domain.orders.interfaces import IProductReservationRepository
 from src.domain.shared.exceptions import InvalidFieldError
 from src.domain.tasks.entities import (
     ProductionTask,
@@ -18,8 +20,9 @@ from src.domain.tasks.interfaces import (
     ITaskCompletionRepository,
     ITaskStopRepository,
 )
-from src.domain.tasks.value_objects import TaskStatus
-from src.domain.warehouse.interfaces import IRawMaterialStockRepository
+from src.domain.tasks.value_objects import TaskStatus, TaskType
+from src.domain.warehouse.entities import ProductStock
+from src.domain.warehouse.interfaces import IProductStockRepository, IRawMaterialStockRepository
 from src.domain.references.interfaces import IProductRepository
 
 
@@ -187,10 +190,43 @@ async def complete_task(
     await reservation_repo.delete_by_task(dto.task_id)
 
 
-async def close_task(task_id: int, task_repo: IProductionTaskRepository) -> None:
+async def close_task(
+    task_id: int,
+    task_repo: IProductionTaskRepository,
+    completion_repo: ITaskCompletionRepository | None = None,
+    product_stock_repo: IProductStockRepository | None = None,
+    product_reservation_repo: IProductReservationRepository | None = None,
+) -> None:
     task = await get_task(task_id, task_repo)
     task.close()
     await task_repo.save(task)
+
+    if (
+        task.task_type == TaskType.order_task
+        and task.order_id is not None
+        and completion_repo is not None
+        and product_stock_repo is not None
+        and product_reservation_repo is not None
+    ):
+        completion = await completion_repo.get_by_task(task_id)
+        quantity = completion.actual_quantity if completion else task.quantity
+
+        today = date.today()
+        last_batch = await product_stock_repo.get_last_batch_number(today.year)
+        stock = ProductStock(
+            product_id=task.product_id,
+            quantity=quantity,
+            batch_number=last_batch + 1,
+            batch_year=today.year,
+            arrival_date=today,
+            expiry_date=date(today.year, 12, 31),
+            comment=f"Произведено по задаче #{task_id} для заказа #{task.order_id}",
+        )
+        await product_stock_repo.save(stock)
+
+        await product_reservation_repo.save(
+            ProductReservation(order_id=task.order_id, stock_id=stock.id, quantity=quantity)
+        )
 
 
 # ---------------------------------------------------------------------------

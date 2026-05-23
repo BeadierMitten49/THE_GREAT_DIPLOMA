@@ -539,31 +539,35 @@ def _prod_search_and_signal(key: str):
 # ── Product dialogs ─────────────────────────────────────────────────────────
 
 
-@st.dialog("Приход продукции")
-def _prod_income_dialog():
-    if not prod_full:
-        st.info("Сначала добавьте продукцию в справочник.")
+@st.dialog("Приёмка по задаче")
+def _prod_accept_task_dialog(completed_tasks: list[dict]):
+    if not completed_tasks:
+        st.info("Нет завершённых задач для приёмки.")
         return
-    prod_ids = list(prod_full.keys())
-    prod_id = st.selectbox(
-        "Продукция", options=prod_ids,
-        format_func=lambda x: prod_full[x]["name"],
+    task_options = {
+        t["task_id"]: (
+            f"#{t['task_id']} — {t['product_name']} "
+            f"· план {t['planned_quantity']} / факт {t['actual_quantity']} шт"
+        )
+        for t in completed_tasks
+    }
+    task_id = st.selectbox(
+        "Задача", options=list(task_options.keys()),
+        format_func=lambda x: task_options[x],
     )
-    quantity = st.number_input("Количество (шт.)", min_value=1, value=1)
-    arrival_date = st.date_input("Дата прихода", value=TODAY)
-    expiry_date = st.date_input("Срок годности до", value=TODAY)
-    comment = st.text_input("Комментарий")
-    if st.button("Оприходовать", type="primary", use_container_width=True):
+    selected = next(t for t in completed_tasks if t["task_id"] == task_id)
+    st.caption(f"Продукт: **{selected['product_name']}**")
+    st.caption(
+        f"Плановое кол-во: {selected['planned_quantity']} шт · "
+        f"Фактическое кол-во: **{selected['actual_quantity']} шт**"
+    )
+    if selected.get("completed_at"):
+        st.caption(f"Завершена: {selected['completed_at'][:10]}")
+    if st.button("Принять на склад", type="primary", use_container_width=True):
         try:
             client.post(
-                "/warehouse/product-stock",
-                body={
-                    "product_id": prod_id,
-                    "quantity": quantity,
-                    "arrival_date": str(arrival_date),
-                    "expiry_date": str(expiry_date),
-                    "comment": comment if comment else None,
-                },
+                "/warehouse/product-stock/from-task",
+                body={"task_id": task_id},
             )
             st.rerun()
         except APIError as e:
@@ -854,6 +858,13 @@ with tab_prod:
             "comment": s.get("comment") or "",
         })
 
+    # ---- completed tasks for acceptance ----
+    try:
+        completed_tasks = client.get("/warehouse/product-stock/pending-tasks")
+    except APIError:
+        completed_tasks = []
+    pending_count = len(completed_tasks)
+
     prod_search = st.session_state.get("search_prod", "")
     prod_sig_val = st.session_state.get("signal_prod", "Все")
     prod_sig_filter = PROD_SIGNAL_MAP.get(prod_sig_val)
@@ -868,8 +879,9 @@ with tab_prod:
 
     # ---- action buttons ----
     prc = st.columns([3, 1, 1, 1])
-    if prc[1].button("+ Приёмка", type="primary", use_container_width=True, key="prod_btn_income"):
-        _prod_income_dialog()
+    accept_label = f"Приёмка ({pending_count})" if pending_count else "Приёмка"
+    if prc[1].button(accept_label, type="primary", use_container_width=True, key="prod_btn_income", disabled=pending_count == 0):
+        _prod_accept_task_dialog(completed_tasks)
     if prc[2].button("− Списание", use_container_width=True, key="prod_btn_wo", disabled=prod_sel is None):
         if prod_sel is not None:
             _prod_writeoff_dialog(prod_sel)

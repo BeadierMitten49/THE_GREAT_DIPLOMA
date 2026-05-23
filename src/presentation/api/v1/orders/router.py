@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, status
 
 from src.domain.orders.value_objects import OrderStatus
@@ -7,8 +9,11 @@ from src.presentation.api.v1.orders.schemas import (
     ChangeOrderStatusRequest,
     CreateOrderRequest,
     EditOrderRequest,
+    ItemReservationInfo,
+    OrderDrawerResponse,
     OrderItemResponse,
     OrderResponse,
+    OrderTaskInfo,
     ProductReservationResponse,
     ReserveProductRequest,
 )
@@ -17,25 +22,34 @@ from src.presentation.api.v1.orders.service import OrderService
 router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[director_only])
 
 
-def _order_response(order) -> OrderResponse:
+async def _to_response(order, service: OrderService) -> OrderResponse:
+    customer_name = await service.get_customer_name(order.customer_id)
+    delivery_user_name = None
+    if order.delivery_user_id:
+        delivery_user_name = await service.get_delivery_user_name(order.delivery_user_id)
     return OrderResponse(
         id=order.id,
         number=order.number,
         customer_id=order.customer_id,
+        customer_name=customer_name,
         delivery_address=order.delivery_address,
         delivery_date=order.delivery_date,
         status=order.status,
         delivery_user_id=order.delivery_user_id,
+        delivery_user_name=delivery_user_name,
         comment=order.comment,
         created_at=order.created_at,
     )
 
 
-def _item_response(item) -> OrderItemResponse:
+async def _item_response(item, service: OrderService) -> OrderItemResponse:
+    product_name, units_per_box = await service.get_product_info(item.product_id)
     return OrderItemResponse(
         id=item.id,
         order_id=item.order_id,
         product_id=item.product_id,
+        product_name=product_name,
+        units_per_box=units_per_box,
         quantity=item.quantity,
     )
 
@@ -44,21 +58,46 @@ def _item_response(item) -> OrderItemResponse:
 async def get_orders(
     status: OrderStatus | None = None,
     customer_id: int | None = None,
+    delivery_date_from: date | None = None,
+    delivery_date_to: date | None = None,
     service: OrderService = Depends(get_order_service),
 ):
-    orders = await service.get_all(status=status, customer_id=customer_id)
-    return [_order_response(o) for o in orders]
+    orders = await service.get_all(
+        status=status,
+        customer_id=customer_id,
+        delivery_date_from=delivery_date_from,
+        delivery_date_to=delivery_date_to,
+    )
+    return [await _to_response(o, service) for o in orders]
 
 
 @router.get("/{id}", response_model=OrderResponse)
 async def get_order(id: int, service: OrderService = Depends(get_order_service)):
-    return _order_response(await service.get(id))
+    return await _to_response(await service.get(id), service)
 
 
 @router.get("/{id}/items", response_model=list[OrderItemResponse])
 async def get_order_items(id: int, service: OrderService = Depends(get_order_service)):
     items = await service.get_items(id)
-    return [_item_response(i) for i in items]
+    return [await _item_response(i, service) for i in items]
+
+
+@router.get("/{id}/drawer", response_model=OrderDrawerResponse)
+async def get_order_drawer(id: int, service: OrderService = Depends(get_order_service)):
+    data = await service.get_drawer_data(id)
+    order_resp = await _to_response(data["order"], service)
+    items_resp = [await _item_response(i, service) for i in data["items"]]
+    reservations_resp = {
+        str(pid): [ItemReservationInfo(**r) for r in rs]
+        for pid, rs in data["reservations_by_item"].items()
+    }
+    tasks_resp = [OrderTaskInfo(**t) for t in data["tasks"]]
+    return OrderDrawerResponse(
+        order=order_resp,
+        items=items_resp,
+        reservations_by_item=reservations_resp,
+        tasks=tasks_resp,
+    )
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)

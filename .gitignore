@@ -35,6 +35,8 @@ __pycache__/
 .playwright-mcp/
 
 # project
-.env
 *.txt
 html_pages/
+.mcp.json
+.codegraph*.png
+.codegraph/

@@ -71,6 +71,10 @@ class ProductStockArrivalRequest(BaseModel):
     comment: str | None = None
 
 
+class ProductStockAcceptFromTaskRequest(BaseModel):
+    task_id: int
+
+
 class ProductStockAdjustRequest(BaseModel):
     quantity: int = Field(ge=0)
     comment: str | None = None

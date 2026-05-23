@@ -33,6 +33,30 @@ async def test_get_orders_filter_by_status(client: AsyncClient, saved_order_id: 
     assert len(r.json()) == 0
 
 
+async def test_get_orders_filter_by_date_range(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(BASE, params={"delivery_date_from": "2026-06-01", "delivery_date_to": "2026-06-30"})
+    assert r.status_code == 200
+    assert len(r.json()) == 1
+
+    r = await client.get(BASE, params={"delivery_date_from": "2026-07-01"})
+    assert r.status_code == 200
+    assert len(r.json()) == 0
+
+    r = await client.get(BASE, params={"delivery_date_to": "2026-05-01"})
+    assert r.status_code == 200
+    assert len(r.json()) == 0
+
+
+async def test_get_orders_combined_filters(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(BASE, params={"status": "created", "delivery_date_from": "2026-06-01"})
+    assert r.status_code == 200
+    assert len(r.json()) == 1
+
+    r = await client.get(BASE, params={"status": "production", "delivery_date_from": "2026-06-01"})
+    assert r.status_code == 200
+    assert len(r.json()) == 0
+
+
 async def test_get_orders_filter_by_customer(client: AsyncClient, saved_order_id: int) -> None:
     r = await client.get(BASE, params={"customer_id": 1})
     assert r.status_code == 200
@@ -58,6 +82,38 @@ async def test_get_order_returns_200(client: AsyncClient, saved_order_id: int) -
     assert data["status"] == "created"
 
 
+async def test_response_contains_customer_name(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(f"{BASE}/{saved_order_id}")
+    assert r.status_code == 200
+    data = r.json()
+    assert "customer_name" in data
+    assert data["customer_name"] == "Магнит, ТТ Авиаторов"
+
+
+async def test_response_contains_delivery_user_name(client: AsyncClient) -> None:
+    r = await client.post(BASE, json={
+        "customer_id": 1,
+        "delivery_address": "ул. Пушкина, 1",
+        "delivery_date": "2026-06-01",
+        "items": [{"product_id": 1, "quantity": 100}],
+        "delivery_user_id": 2,
+    })
+    order_id = r.json()["id"]
+    r = await client.get(f"{BASE}/{order_id}")
+    assert r.status_code == 200
+    data = r.json()
+    assert "delivery_user_name" in data
+    assert data["delivery_user_name"] == "Сидоров А.П."
+
+
+async def test_list_contains_customer_name(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(BASE)
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["customer_name"] == "Магнит, ТТ Авиаторов"
+
+
 async def test_get_order_not_found_returns_404(client: AsyncClient) -> None:
     r = await client.get(f"{BASE}/999")
     assert r.status_code == 404
@@ -75,6 +131,35 @@ async def test_get_order_items(client: AsyncClient, saved_order_id: int) -> None
     assert len(items) == 1
     assert items[0]["product_id"] == 1
     assert items[0]["quantity"] == 100
+
+
+async def test_get_drawer_returns_full_context(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(f"{BASE}/{saved_order_id}/drawer")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["order"]["id"] == saved_order_id
+    assert data["order"]["customer_name"] == "Магнит, ТТ Авиаторов"
+    assert len(data["items"]) == 1
+    assert data["items"][0]["product_name"] == "Молоко 3,2% 1л"
+    assert "1" in data["reservations_by_item"]
+    assert len(data["reservations_by_item"]["1"]) == 1
+    assert data["reservations_by_item"]["1"][0]["batch_label"] == "П-2026-001"
+    assert len(data["tasks"]) == 1
+    assert data["tasks"][0]["product_name"] == "Молоко 3,2% 1л"
+    assert data["tasks"][0]["executor_name"] == "Сидоров А.П."
+
+
+async def test_get_drawer_not_found_returns_404(client: AsyncClient) -> None:
+    r = await client.get(f"{BASE}/999/drawer")
+    assert r.status_code == 404
+
+
+async def test_order_item_contains_product_name(client: AsyncClient, saved_order_id: int) -> None:
+    r = await client.get(f"{BASE}/{saved_order_id}/items")
+    assert r.status_code == 200
+    item = r.json()[0]
+    assert item["product_name"] == "Молоко 3,2% 1л"
+    assert item["units_per_box"] == 12
 
 
 # ---------------------------------------------------------------------------

@@ -32,13 +32,21 @@ class FakeOrderService:
         return order
 
     async def get_all(
-        self, status: OrderStatus | None = None, customer_id: int | None = None
+        self,
+        status: OrderStatus | None = None,
+        customer_id: int | None = None,
+        delivery_date_from: date | None = None,
+        delivery_date_to: date | None = None,
     ) -> list[Order]:
         orders = [o for o in self._orders.values() if o.is_active]
         if status is not None:
             orders = [o for o in orders if o.status == status]
         if customer_id is not None:
             orders = [o for o in orders if o.customer_id == customer_id]
+        if delivery_date_from is not None:
+            orders = [o for o in orders if o.delivery_date >= delivery_date_from]
+        if delivery_date_to is not None:
+            orders = [o for o in orders if o.delivery_date <= delivery_date_to]
         return orders
 
     async def get_items(self, order_id: int) -> list[OrderItem]:
@@ -133,6 +141,47 @@ class FakeOrderService:
         self._reservations = {
             rid: r for rid, r in self._reservations.items() if r.order_id != order_id
         }
+
+    async def get_drawer_data(self, order_id: int) -> dict:
+        order = await self.get(order_id)
+        items = await self.get_items(order_id)
+        reservations_by_item: dict[int, list[dict]] = {}
+        for item in items:
+            reservations_by_item[item.product_id] = [
+                {
+                    "reservation_id": 1,
+                    "stock_id": 10,
+                    "batch_label": "П-2026-001",
+                    "quantity": item.quantity,
+                },
+            ]
+        tasks = [
+            {
+                "task_id": 1,
+                "product_name": "Молоко 3,2% 1л",
+                "quantity": 100,
+                "executor_name": "Сидоров А.П.",
+                "deadline": date(2026, 6, 1),
+                "status": "created",
+            },
+        ]
+        return {
+            "order": order,
+            "items": items,
+            "reservations_by_item": reservations_by_item,
+            "tasks": tasks,
+        }
+
+    async def get_product_info(self, product_id: int) -> tuple[str, int]:
+        return {1: ("Молоко 3,2% 1л", 12), 2: ("Кефир 1% 1л", 12)}.get(
+            product_id, (f"Продукт #{product_id}", 1)
+        )
+
+    async def get_customer_name(self, customer_id: int) -> str:
+        return {1: "Магнит, ТТ Авиаторов"}.get(customer_id, f"Клиент #{customer_id}")
+
+    async def get_delivery_user_name(self, user_id: int) -> str | None:
+        return {2: "Сидоров А.П."}.get(user_id)
 
 
 def _make_director() -> User:

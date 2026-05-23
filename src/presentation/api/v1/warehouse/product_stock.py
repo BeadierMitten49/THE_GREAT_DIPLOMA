@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status
 from src.presentation.api.v1.dependencies import director_only, director_or_warehouse
 from src.presentation.api.v1.warehouse.dependencies import get_product_stock_service
 from src.presentation.api.v1.warehouse.schemas import (
+    ProductStockAcceptFromTaskRequest,
     ProductStockAdjustRequest,
     ProductStockArrivalRequest,
     ProductStockResponse,
@@ -45,12 +46,28 @@ async def get_product_stocks(
     return [await _to_response(s, service) for s in entities]
 
 
+@router.get("/pending-tasks", response_model=list[dict])
+async def get_pending_tasks(
+    service: ProductStockService = Depends(get_product_stock_service),
+):
+    return await service.get_pending_acceptances()
+
+
 @router.get("/{id}", response_model=ProductStockResponse)
 async def get_product_stock(
     id: int,
     service: ProductStockService = Depends(get_product_stock_service),
 ):
     return await _to_response(await service.get(id), service)
+
+
+@router.post("/from-task", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def accept_from_task(
+    body: ProductStockAcceptFromTaskRequest,
+    service: ProductStockService = Depends(get_product_stock_service),
+):
+    stock_id = await service.accept_from_task(body.task_id)
+    return {"id": stock_id}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)

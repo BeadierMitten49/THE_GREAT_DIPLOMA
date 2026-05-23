@@ -92,6 +92,26 @@ async def test_adjust_negative_quantity_returns_422(client: AsyncClient, saved: 
     assert r.status_code == 422
 
 
+async def test_pending_tasks_returns_list(client: AsyncClient) -> None:
+    r = await client.get(f"{BASE}/pending-tasks")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["actual_quantity"] == 95
+    assert data[0]["planned_quantity"] == 100
+
+
+async def test_accept_from_task_returns_201(client: AsyncClient) -> None:
+    r = await client.post(f"{BASE}/from-task", json={"task_id": 1})
+    assert r.status_code == 201
+    assert "id" in r.json()
+
+
+async def test_accept_from_task_not_found_returns_404(client: AsyncClient) -> None:
+    r = await client.post(f"{BASE}/from-task", json={"task_id": 999})
+    assert r.status_code == 404
+
+
 async def test_response_contains_reserved_field(client: AsyncClient, saved: int) -> None:
     r = await client.get(f"{BASE}/{saved}")
     assert r.status_code == 200
