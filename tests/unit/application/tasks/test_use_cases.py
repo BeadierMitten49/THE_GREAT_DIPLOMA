@@ -354,12 +354,11 @@ class TestCompleteTask:
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
-        reservation_repo: FakeRawMaterialReservationRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
         await start_task(saved_task.id, task_repo)
-        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo)
         task = await task_repo.get_by_id(saved_task.id)
         assert task.status == TaskStatus.completed
 
@@ -367,12 +366,11 @@ class TestCompleteTask:
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
-        reservation_repo: FakeRawMaterialReservationRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
         await start_task(saved_task.id, task_repo)
-        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo)
         completion = await completion_repo.get_by_task(saved_task.id)
         assert completion is not None
         assert completion.actual_quantity == 95
@@ -381,18 +379,17 @@ class TestCompleteTask:
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
-        reservation_repo: FakeRawMaterialReservationRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
         await start_task(saved_task.id, task_repo)
-        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo)
         completion = await completion_repo.get_by_task(saved_task.id)
         consumptions = await completion_repo.get_consumptions(completion.id)
         assert len(consumptions) == 1
         assert consumptions[0].actual_qty == Decimal("48")
 
-    async def test_releases_reservations(
+    async def test_keeps_reservations(
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
@@ -404,33 +401,31 @@ class TestCompleteTask:
             RawMaterialReservation(stock_id=1, task_id=saved_task.id, quantity=Decimal("55"))
         )
         await start_task(saved_task.id, task_repo)
-        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo)
         remaining = await reservation_repo.get_by_task(saved_task.id)
-        assert remaining == []
+        assert len(remaining) == 1
 
     async def test_not_found_raises(
         self,
         task_repo: FakeProductionTaskRepository,
         completion_repo: FakeTaskCompletionRepository,
-        reservation_repo: FakeRawMaterialReservationRepository,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
         with pytest.raises(NotFoundError):
-            await complete_task(self._dto(999), task_repo, product_repo, completion_repo, reservation_repo)
+            await complete_task(self._dto(999), task_repo, product_repo, completion_repo)
 
     async def test_from_stopped_raises(
         self,
         task_repo: FakeProductionTaskRepository,
         stop_repo: FakeTaskStopRepository,
         completion_repo: FakeTaskCompletionRepository,
-        reservation_repo: FakeRawMaterialReservationRepository,
         saved_task: ProductionTask,
     ) -> None:
         product_repo = FakeProductRepository(_make_product())
         await start_task(saved_task.id, task_repo)
         await stop_task(saved_task.id, "r", task_repo, stop_repo)
         with pytest.raises(InvalidFieldError):
-            await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo, reservation_repo)
+            await complete_task(self._dto(saved_task.id), task_repo, product_repo, completion_repo)
 
 
 # ---------------------------------------------------------------------------
@@ -454,12 +449,13 @@ class TestCloseTask:
             task_id=saved_task.id, actual_quantity=90,
             consumptions=[ConsumptionInputDTO(raw_material_id=1, actual_qty=Decimal("45"))],
         )
-        await complete_task(dto, task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(dto, task_repo, product_repo, completion_repo)
         await close_task(
             saved_task.id, task_repo,
             completion_repo=completion_repo,
             product_stock_repo=product_stock_repo,
             raw_material_stock_repo=stock_repo,
+            raw_material_reservation_repo=reservation_repo,
         )
         task = await task_repo.get_by_id(saved_task.id)
         assert task.status == TaskStatus.closed
@@ -536,12 +532,13 @@ class TestReassignTask:
             task_id=saved_task.id, actual_quantity=90,
             consumptions=[ConsumptionInputDTO(raw_material_id=1, actual_qty=Decimal("45"))],
         )
-        await complete_task(dto, task_repo, product_repo, completion_repo, reservation_repo)
+        await complete_task(dto, task_repo, product_repo, completion_repo)
         await close_task(
             saved_task.id, task_repo,
             completion_repo=completion_repo,
             product_stock_repo=product_stock_repo,
             raw_material_stock_repo=stock_repo,
+            raw_material_reservation_repo=reservation_repo,
         )
         with pytest.raises(InvalidFieldError):
             await reassign_task(saved_task.id, 99, task_repo)

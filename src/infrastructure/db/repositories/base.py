@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -61,3 +61,8 @@ class BasePlainRepository[TEntity, TModel](BaseRepository[TEntity, TModel]):
     async def get_all(self) -> list[TEntity]:
         result = await self._session.execute(select(self._model_class))
         return [self._to_entity(row) for row in result.scalars().all()]
+
+    async def delete(self, id: int) -> None:
+        await self._session.execute(
+            delete(self._model_class).where(self._model_class.id == id)
+        )

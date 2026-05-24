@@ -3,13 +3,14 @@ from datetime import date
 from fastapi import APIRouter, Depends, status
 
 from src.domain.orders.value_objects import OrderStatus
-from src.presentation.api.v1.dependencies import director_only, director_or_warehouse_or_delivery
+from src.presentation.api.v1.dependencies import director_only, director_or_warehouse, director_or_warehouse_or_delivery
 from src.presentation.api.v1.orders.dependencies import get_order_service
 from src.presentation.api.v1.orders.schemas import (
     ChangeOrderStatusRequest,
     CreateOrderRequest,
     EditOrderRequest,
     ItemReservationInfo,
+    MarkAssembledRequest,
     OrderDrawerResponse,
     OrderItemResponse,
     OrderResponse,
@@ -51,6 +52,7 @@ async def _item_response(item, service: OrderService) -> OrderItemResponse:
         product_name=product_name,
         units_per_box=units_per_box,
         quantity=item.quantity,
+        is_assembled=item.is_assembled,
     )
 
 
@@ -69,6 +71,19 @@ async def get_orders(
         delivery_date_to=delivery_date_to,
     )
     return [await _to_response(o, service) for o in orders]
+
+
+@router.patch(
+    "/items/{item_id}/assembled",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[director_or_warehouse],
+)
+async def mark_item_assembled(
+    item_id: int,
+    body: MarkAssembledRequest,
+    service: OrderService = Depends(get_order_service),
+):
+    await service.mark_item_assembled(item_id, body.is_assembled)
 
 
 @router.get("/{id}", response_model=OrderResponse)

@@ -51,6 +51,7 @@ class OrderItem:
     order_id: int
     product_id: int
     quantity: int
+    is_assembled: bool = False
     id: int | None = None
 
 

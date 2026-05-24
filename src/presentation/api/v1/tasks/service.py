@@ -87,7 +87,7 @@ class ProductionTaskService:
         await resume_task(task_id, self._task_repo, self._stop_repo)
 
     async def complete(self, dto: CompleteTaskDTO) -> None:
-        await complete_task(dto, self._task_repo, self._product_repo, self._completion_repo, self._reservation_repo)
+        await complete_task(dto, self._task_repo, self._product_repo, self._completion_repo)
 
     async def close(self, task_id: int) -> None:
         await close_task(
@@ -95,6 +95,7 @@ class ProductionTaskService:
             completion_repo=self._completion_repo,
             product_stock_repo=self._product_stock_repo,
             raw_material_stock_repo=self._stock_repo,
+            raw_material_reservation_repo=self._reservation_repo,
             product_reservation_repo=self._product_reservation_repo,
         )
 

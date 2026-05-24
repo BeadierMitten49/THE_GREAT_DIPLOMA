@@ -43,12 +43,18 @@ class OrderRepository(BaseSoftDeleteRepository[Order, OrderModel], IOrderReposit
         }
 
     async def get_by_status(self, status: OrderStatus) -> list[Order]:
-        stmt = select(OrderModel).where(OrderModel.status == status)
+        stmt = select(OrderModel).where(
+            OrderModel.status == status,
+            OrderModel.is_active.is_(True),
+        )
         result = await self._session.execute(stmt)
         return [self._to_entity(row) for row in result.scalars().all()]
 
     async def get_by_customer(self, customer_id: int) -> list[Order]:
-        stmt = select(OrderModel).where(OrderModel.customer_id == customer_id)
+        stmt = select(OrderModel).where(
+            OrderModel.customer_id == customer_id,
+            OrderModel.is_active.is_(True),
+        )
         result = await self._session.execute(stmt)
         return [self._to_entity(row) for row in result.scalars().all()]
 
@@ -72,6 +78,7 @@ class OrderItemRepository(
             order_id=model.order_id,
             product_id=model.product_id,
             quantity=model.quantity,
+            is_assembled=model.is_assembled,
         )
 
     def _to_values(self, entity: OrderItem) -> dict:
@@ -79,6 +86,7 @@ class OrderItemRepository(
             "order_id": entity.order_id,
             "product_id": entity.product_id,
             "quantity": entity.quantity,
+            "is_assembled": entity.is_assembled,
         }
 
     async def get_by_order(self, order_id: int) -> list[OrderItem]:

@@ -59,7 +59,10 @@ async def raw_material_stock_write_off(
     if stock is None:
         raise NotFoundError("RawMaterialStock", dto.stock_id)
     stock.write_off(dto.amount)
-    await repo.save(stock)
+    if stock.quantity == 0:
+        await repo.delete(stock.id)
+    else:
+        await repo.save(stock)
 
 
 async def raw_material_stock_adjust(
@@ -69,7 +72,10 @@ async def raw_material_stock_adjust(
     if stock is None:
         raise NotFoundError("RawMaterialStock", dto.stock_id)
     stock.adjust(dto.quantity, dto.comment)
-    await repo.save(stock)
+    if stock.quantity == 0:
+        await repo.delete(stock.id)
+    else:
+        await repo.save(stock)
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +118,10 @@ async def packaging_stock_write_off(
     if stock is None:
         raise NotFoundError("PackagingStock", dto.stock_id)
     stock.write_off(dto.amount)
-    await repo.save(stock)
+    if stock.quantity == 0:
+        await repo.delete(stock.id)
+    else:
+        await repo.save(stock)
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +153,10 @@ async def product_stock_adjust(
     if stock is None:
         raise NotFoundError("ProductStock", dto.stock_id)
     stock.adjust(dto.quantity, dto.comment)
-    await repo.save(stock)
+    if stock.quantity == 0:
+        await repo.delete(stock.id)
+    else:
+        await repo.save(stock)
 
 
 async def product_stock_write_off(
@@ -154,7 +166,10 @@ async def product_stock_write_off(
     if stock is None:
         raise NotFoundError("ProductStock", dto.stock_id)
     stock.write_off(dto.amount)
-    await repo.save(stock)
+    if stock.quantity == 0:
+        await repo.delete(stock.id)
+    else:
+        await repo.save(stock)
 
 
 async def product_stock_arrival(

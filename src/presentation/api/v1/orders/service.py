@@ -12,6 +12,7 @@ from src.application.orders.use_cases import (
     get_order_items,
     get_order_reservations,
     get_orders,
+    mark_item_assembled,
     release_order_reservations,
     release_product_reservation,
     reserve_product_for_order,
@@ -60,6 +61,9 @@ class OrderService:
 
     async def get_items(self, order_id: int) -> list[OrderItem]:
         return await get_order_items(order_id, self._item_repo)
+
+    async def mark_item_assembled(self, item_id: int, is_assembled: bool) -> None:
+        await mark_item_assembled(item_id, is_assembled, self._item_repo)
 
     async def create(
         self,

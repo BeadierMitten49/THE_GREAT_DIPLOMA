@@ -155,7 +155,6 @@ async def complete_task(
     task_repo: IProductionTaskRepository,
     product_repo: IProductRepository,
     completion_repo: ITaskCompletionRepository,
-    reservation_repo: IRawMaterialReservationRepository,
 ) -> None:
     task = await get_task(dto.task_id, task_repo)
     task.complete()
@@ -187,8 +186,6 @@ async def complete_task(
             )
         )
 
-    await reservation_repo.delete_by_task(dto.task_id)
-
 
 async def close_task(
     task_id: int,
@@ -196,11 +193,16 @@ async def close_task(
     completion_repo: ITaskCompletionRepository,
     product_stock_repo: IProductStockRepository,
     raw_material_stock_repo: IRawMaterialStockRepository,
+    raw_material_reservation_repo: IRawMaterialReservationRepository | None = None,
     product_reservation_repo: IProductReservationRepository | None = None,
 ) -> None:
     task = await get_task(task_id, task_repo)
     task.close()
     await task_repo.save(task)
+
+    # ── Снятие резервов сырья ──
+    if raw_material_reservation_repo is not None:
+        await raw_material_reservation_repo.delete_by_task(task_id)
 
     # ── Списание сырья по фактическому расходу ──
     completion = await completion_repo.get_by_task(task_id)
@@ -219,7 +221,10 @@ async def close_task(
                 if can_take <= 0:
                     continue
                 batch.write_off(can_take)
-                await raw_material_stock_repo.save(batch)
+                if batch.quantity == 0:
+                    await raw_material_stock_repo.delete(batch.id)
+                else:
+                    await raw_material_stock_repo.save(batch)
                 remaining -= can_take
 
     # ── Добавление продукции на склад ──

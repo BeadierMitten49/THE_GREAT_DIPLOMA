@@ -37,6 +37,10 @@ class ReserveProductRequest(BaseModel):
     quantity: int = Field(gt=0)
 
 
+class MarkAssembledRequest(BaseModel):
+    is_assembled: bool
+
+
 class OrderItemResponse(BaseModel):
     id: int
     order_id: int
@@ -44,6 +48,7 @@ class OrderItemResponse(BaseModel):
     product_name: str
     units_per_box: int
     quantity: int
+    is_assembled: bool
 
 
 class ProductReservationResponse(BaseModel):

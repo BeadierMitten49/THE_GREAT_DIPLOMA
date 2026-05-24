@@ -10,6 +10,7 @@ def _build_pages(roles: list[str]) -> list[st.Page]:
     pages = []
     if "director" in role_set or "warehouse" in role_set:
         pages.append(st.Page("pages/warehouse.py", title="Склад"))
+        pages.append(st.Page("pages/shipments.py", title="Отгрузки"))
     if "director" in role_set or "production" in role_set:
         pages.append(st.Page("pages/tasks.py", title="Задачи"))
     if "director" in role_set or "delivery" in role_set:

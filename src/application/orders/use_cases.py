@@ -55,6 +55,18 @@ async def get_order_items(
     return await item_repo.get_by_order(order_id)
 
 
+async def mark_item_assembled(
+    item_id: int,
+    is_assembled: bool,
+    item_repo: IOrderItemRepository,
+) -> None:
+    item = await item_repo.get_by_id(item_id)
+    if item is None:
+        raise NotFoundError("OrderItem", item_id)
+    item.is_assembled = is_assembled
+    await item_repo.save(item)
+
+
 # ---------------------------------------------------------------------------
 # Create
 # ---------------------------------------------------------------------------
@@ -103,6 +115,7 @@ async def change_order_status(
         await _validate_tasks_closed(order.id, task_repo)
 
     if dto.new_status == OrderStatus.delivery:
+        await _validate_all_items_assembled(order.id, item_repo)
         await _validate_reservations_cover_items(
             order.id, item_repo, reservation_repo, stock_repo
         )
@@ -129,6 +142,19 @@ async def _validate_tasks_closed(
         raise InvalidFieldError(
             "status",
             "нельзя перевести в сборку: не все производственные задачи закрыты",
+        )
+
+
+async def _validate_all_items_assembled(
+    order_id: int,
+    item_repo: IOrderItemRepository,
+) -> None:
+    items = await item_repo.get_by_order(order_id)
+    not_assembled = [i for i in items if not i.is_assembled]
+    if not_assembled:
+        raise InvalidFieldError(
+            "status",
+            "нельзя перевести в доставку: не все позиции отмечены как собранные",
         )
 
 
@@ -165,7 +191,10 @@ async def _ship_stock(
         stock = await stock_repo.get_by_id(res.stock_id)
         if stock is not None:
             stock.write_off(res.quantity)
-            await stock_repo.save(stock)
+            if stock.quantity == 0:
+                await stock_repo.delete(stock.id)
+            else:
+                await stock_repo.save(stock)
     await reservation_repo.delete_by_order(order_id)
 
 

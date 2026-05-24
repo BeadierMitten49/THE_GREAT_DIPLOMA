@@ -169,6 +169,9 @@ class FakeRawMaterialStockRepository:
     async def get_by_raw_material(self, raw_material_id: int) -> list[RawMaterialStock]:
         return [b for b in self._store.values() if b.raw_material_id == raw_material_id]
 
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
+
 
 class FakeProductStockRepository:
     def __init__(self) -> None:
@@ -194,6 +197,9 @@ class FakeProductStockRepository:
     async def get_last_batch_number(self, year: int) -> int:
         nums = [s.batch_number for s in self._store.values() if s.batch_year == year]
         return max(nums) if nums else 0
+
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
 
 
 class FakeProductRepository:
