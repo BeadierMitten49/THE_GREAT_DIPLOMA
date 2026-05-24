@@ -246,7 +246,6 @@ active_reserves = _get_active_reserves()
 overdue_tasks = _get_overdue_tasks()
 upcoming_deliveries = _get_upcoming_deliveries()
 tasks_for_review = _get_tasks_for_review()
-notifications = _get_notifications()
 
 # ── Row 1 ────────────────────────────────────────────────────────────────────
 
@@ -332,19 +331,24 @@ with c5:
             st.caption(f"+ {len(tasks_for_review) - 3} ещё")
 
 with c6:
-    st.markdown("**Уведомления**")
-    if not notifications:
-        st.info("Новых уведомлений нет")
-    else:
-        st.caption(f"{len(notifications)} новых")
-        for n in notifications[:5]:
-            created = n.get("created_at", "")[:16].replace("T", " · ")
-            st.markdown(f"**{created}** — {n['title']}")
-        if len(notifications) > 5:
-            st.caption(f"+ {len(notifications) - 5} ещё")
-        if st.button("Отметить все прочитанными", key="mark_all_read"):
-            try:
-                client.post("/notifications/read-all")
-                st.rerun()
-            except APIError as e:
-                _err(e)
+    @st.fragment(run_every=5)
+    def _notifications_fragment():
+        notifications = _get_notifications()
+        st.markdown("**Уведомления**")
+        if not notifications:
+            st.info("Новых уведомлений нет")
+        else:
+            st.caption(f"{len(notifications)} новых")
+            for n in notifications[:5]:
+                created = n.get("created_at", "")[:16].replace("T", " · ")
+                st.markdown(f"**{created}** — {n['title']}")
+            if len(notifications) > 5:
+                st.caption(f"+ {len(notifications) - 5} ещё")
+            if st.button("Отметить все прочитанными", key="mark_all_read"):
+                try:
+                    client.post("/notifications/read-all")
+                    st.rerun()
+                except APIError as e:
+                    _err(e)
+
+    _notifications_fragment()
