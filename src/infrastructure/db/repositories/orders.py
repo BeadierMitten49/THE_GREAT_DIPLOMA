@@ -78,6 +78,7 @@ class OrderItemRepository(
             order_id=model.order_id,
             product_id=model.product_id,
             quantity=model.quantity,
+            is_assembled=model.is_assembled,
         )
 
     def _to_values(self, entity: OrderItem) -> dict:
@@ -85,6 +86,7 @@ class OrderItemRepository(
             "order_id": entity.order_id,
             "product_id": entity.product_id,
             "quantity": entity.quantity,
+            "is_assembled": entity.is_assembled,
         }
 
     async def get_by_order(self, order_id: int) -> list[OrderItem]:

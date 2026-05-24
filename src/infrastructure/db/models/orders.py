@@ -30,6 +30,7 @@ class OrderItemModel(Base):
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), nullable=False)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_assembled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class ProductReservationModel(Base):

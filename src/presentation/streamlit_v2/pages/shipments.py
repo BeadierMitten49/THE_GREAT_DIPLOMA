@@ -92,13 +92,12 @@ def _days_until(d_str: str) -> str:
     return f"через {delta} дн."
 
 
-def _readiness(items: list[dict], res_by_item: dict) -> str:
-    for item in items:
-        pid_key = str(item["product_id"])
-        reserved = sum(r["quantity"] for r in res_by_item.get(pid_key, []))
-        if reserved < item["quantity"]:
-            return "⚠️ Не полностью"
-    return "✅ Готов"
+def _readiness(items: list[dict]) -> str:
+    if not items:
+        return "⚠️ Не полностью"
+    if all(item.get("is_assembled", False) for item in items):
+        return "✅ Готов"
+    return "⚠️ Не полностью"
 
 
 def _table(df: pd.DataFrame, key: str):
@@ -123,6 +122,14 @@ def _drawer_fields(fields: dict):
         col_v.markdown(f"**{v}**")
 
 
+def _toggle_assembled(item_id: int, check_key: str):
+    new_value = st.session_state[check_key]
+    try:
+        client.patch(f"/orders/items/{item_id}/assembled", body={"is_assembled": new_value})
+    except APIError as e:
+        _err(e)
+
+
 # ── Load orders in assembly status ────────────────────────────────────────────
 
 try:
@@ -145,7 +152,6 @@ def _to_df(order_list: list[dict]) -> pd.DataFrame:
     for o in order_list:
         d = drawer_cache.get(o["id"])
         items = d["items"] if d else []
-        res_by_item = d["reservations_by_item"] if d else {}
         total_items = len(items)
 
         rows.append({
@@ -154,7 +160,7 @@ def _to_df(order_list: list[dict]) -> pd.DataFrame:
             "Дата доставки": o["delivery_date"],
             "Срок": _days_until(o["delivery_date"]),
             "Позиций": total_items,
-            "Готовность": _readiness(items, res_by_item),
+            "Готовность": _readiness(items),
             "Курьер": o.get("delivery_user_name") or "—",
         })
     return pd.DataFrame(rows)
@@ -174,11 +180,8 @@ def _confirm_issue_dialog(order: dict, drawer: dict):
 
     st.divider()
     st.markdown("**Состав заказа:**")
-    res_by_item = drawer["reservations_by_item"]
     for item in items:
-        pid_key = str(item["product_id"])
-        reserved = sum(r["quantity"] for r in res_by_item.get(pid_key, []))
-        status_icon = "✅" if reserved >= item["quantity"] else "⚠️"
+        status_icon = "✅" if item.get("is_assembled") else "⚠️"
         upb = item.get("units_per_box", 1)
         st.write(f"{status_icon} **{item['product_name']}** — {_qty_label(item['quantity'], upb)}")
 
@@ -265,7 +268,7 @@ if readiness_filter != "Все":
         if not d:
             filtered.remove(o)
             continue
-        r = _readiness(d["items"], d["reservations_by_item"])
+        r = _readiness(d["items"])
         if readiness_filter == "Готов к выдаче" and r != "✅ Готов":
             filtered.remove(o)
         elif readiness_filter == "Не полностью" and r == "✅ Готов":
@@ -301,7 +304,7 @@ elif _selected_rows("tbl_shipments"):
                 )
 
                 # ---- Action: Выдано ----
-                readiness = _readiness(items, res_by_item)
+                readiness = _readiness(items)
                 if readiness == "✅ Готов":
                     if st.button(
                         "📦 Выдано — передать курьеру",
@@ -318,7 +321,7 @@ elif _selected_rows("tbl_shipments"):
                         key="dr_issue_disabled",
                         disabled=True,
                     )
-                    st.caption("⚠️ Не все позиции зарезервированы")
+                    st.caption("⚠️ Не все позиции собраны")
 
                 st.divider()
 
@@ -351,13 +354,19 @@ elif _selected_rows("tbl_shipments"):
                     reserved = sum(r["quantity"] for r in item_reservations)
                     is_covered = reserved >= item["quantity"]
                     upb = item.get("units_per_box", 1)
-                    check_key = f"check_{o['id']}_{i}"
+                    check_key = f"check_{o['id']}_{item['id']}"
 
                     with st.container(border=True):
                         ch1, ch2 = st.columns([1, 20])
-                        checked = ch1.checkbox(
-                            "ok", key=check_key, label_visibility="collapsed",
+                        ch1.checkbox(
+                            "ok",
+                            key=check_key,
+                            value=item.get("is_assembled", False),
+                            label_visibility="collapsed",
+                            on_change=_toggle_assembled,
+                            args=(item["id"], check_key),
                         )
+                        checked = item.get("is_assembled", False)
                         status_icon = "✅" if checked else ("🟢" if is_covered else "⚠️")
 
                         ch2.markdown(
@@ -377,8 +386,7 @@ elif _selected_rows("tbl_shipments"):
                 # Итог чек-листа
                 total_items = len(items)
                 checked_count = sum(
-                    1 for i in range(total_items)
-                    if st.session_state.get(f"check_{o['id']}_{i}", False)
+                    1 for item in items if item.get("is_assembled", False)
                 )
                 if checked_count == total_items:
                     st.success(f"Все {total_items} позиций собраны!")
@@ -398,7 +406,7 @@ tomorrow_str = str(TODAY + datetime.timedelta(days=1))
 
 for o in orders:
     d = drawer_cache.get(o["id"])
-    if d and _readiness(d["items"], d["reservations_by_item"]) == "✅ Готов":
+    if d and _readiness(d["items"]) == "✅ Готов":
         ready_count += 1
     if o["delivery_date"] == str(TODAY):
         today_count += 1

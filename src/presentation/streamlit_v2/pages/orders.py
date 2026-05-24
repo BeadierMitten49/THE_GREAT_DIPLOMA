@@ -441,13 +441,43 @@ def _create_task_and_set_production_dialog(order: dict, items: list[dict]):
             _err(e)
 
 
-@st.dialog("Доставка — создать и отправить")
-def _create_delivery_and_set_status_dialog(order: dict):
+@st.dialog("Доставка — создать и отправить", width="large")
+def _create_delivery_and_set_status_dialog(order: dict, items: list[dict]):
     st.caption(f"Заказ № {_order_number_label(order['number'])}")
     st.markdown(
         "Создайте доставку для заказа. После создания заказ будет "
         "переведён в статус **Доставка**."
     )
+
+    # ---- Чек-лист сборки ----
+    st.divider()
+    st.markdown("**Чек-лист сборки**")
+    all_checked = True
+    for i, item in enumerate(items):
+        checked = st.checkbox(
+            f"{item['product_name']} — {_item_qty_label(item)}",
+            value=item.get("is_assembled", False),
+            key=f"dlg_check_{order['id']}_{item['id']}",
+        )
+        if not item.get("is_assembled", False) and checked:
+            try:
+                client.patch(f"/orders/items/{item['id']}/assembled", body={"is_assembled": True})
+            except APIError as e:
+                _err(e)
+        elif item.get("is_assembled", False) and not checked:
+            try:
+                client.patch(f"/orders/items/{item['id']}/assembled", body={"is_assembled": False})
+            except APIError as e:
+                _err(e)
+        if not checked:
+            all_checked = False
+
+    if not all_checked:
+        st.info("Отметьте все позиции как собранные для создания доставки.")
+        return
+
+    st.success("Все позиции собраны!")
+    st.divider()
 
     driver_ids = list(delivery_user_map.keys())
     if not driver_ids:
@@ -626,7 +656,7 @@ elif sel_rows:
                         if ac1.button("✎ Редактировать", key="dr_edit"):
                             _edit_order_dialog(o, items)
                         if ac2.button("→ Доставка", type="primary", key="dr_to_delivery"):
-                            _create_delivery_and_set_status_dialog(o)
+                            _create_delivery_and_set_status_dialog(o, items)
                         if ac3.button("🗑 Удалить", key="dr_delete"):
                             _delete_order_dialog(o)
 
