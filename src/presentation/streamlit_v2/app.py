@@ -8,6 +8,8 @@ st.set_page_config(page_title="АИС «Ярко»", layout="wide")
 def _build_pages(roles: list[str]) -> list[st.Page]:
     role_set = set(roles)
     pages = []
+    if "director" in role_set:
+        pages.append(st.Page("pages/dashboard.py", title="Дашборд"))
     if "director" in role_set or "warehouse" in role_set:
         pages.append(st.Page("pages/warehouse.py", title="Склад"))
         pages.append(st.Page("pages/shipments.py", title="Отгрузки"))
