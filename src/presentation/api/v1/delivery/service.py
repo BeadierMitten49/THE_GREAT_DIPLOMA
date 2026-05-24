@@ -12,14 +12,23 @@ from src.application.delivery.use_cases import (
     pick_up_order,
     start_delivery,
 )
+from src.domain.auth.value_objects import Role
 from src.domain.delivery.entities import Delivery
 from src.domain.delivery.value_objects import DeliveryStatus
+from src.infrastructure.db.repositories.auth import UserRepository
 from src.infrastructure.db.repositories.delivery import DeliveryRepository
+from src.infrastructure.notifications.service import DbNotificationService
 
 
 class DeliveryService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = DeliveryRepository(session)
+        self._user_repo = UserRepository(session)
+        self._notification_service = DbNotificationService(session)
+
+    async def _get_director_ids(self) -> list[int]:
+        users = await self._user_repo.get_all()
+        return [u.id for u in users if u.has_role(Role.director)]
 
     async def get(self, delivery_id: int) -> Delivery:
         return await get_delivery(delivery_id, self._repo)
@@ -46,7 +55,17 @@ class DeliveryService:
         await start_delivery(delivery_id, self._repo)
 
     async def complete(self, delivery_id: int) -> None:
-        await complete_delivery(delivery_id, self._repo)
+        director_ids = await self._get_director_ids()
+        await complete_delivery(
+            delivery_id, self._repo,
+            notification_service=self._notification_service,
+            director_ids=director_ids,
+        )
 
     async def cancel(self, delivery_id: int, reason: str) -> None:
-        await cancel_delivery(delivery_id, reason, self._repo)
+        director_ids = await self._get_director_ids()
+        await cancel_delivery(
+            delivery_id, reason, self._repo,
+            notification_service=self._notification_service,
+            director_ids=director_ids,
+        )

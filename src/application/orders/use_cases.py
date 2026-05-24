@@ -13,6 +13,8 @@ from src.domain.shared.exceptions import InvalidFieldError
 from src.domain.tasks.interfaces import IProductionTaskRepository
 from src.domain.tasks.value_objects import TaskStatus
 from src.domain.warehouse.interfaces import IProductStockRepository
+from src.application.ports.notification_port import INotificationService
+from src.domain.notifications.value_objects import NotificationEvent
 
 _NOT_EDITABLE = {OrderStatus.delivery, OrderStatus.completed}
 
@@ -106,6 +108,7 @@ async def change_order_status(
     reservation_repo: IProductReservationRepository,
     stock_repo: IProductStockRepository,
     task_repo: IProductionTaskRepository | None = None,
+    notification_service: INotificationService | None = None,
 ) -> None:
     order = await order_repo.get_by_id(dto.order_id)
     if order is None:
@@ -123,6 +126,16 @@ async def change_order_status(
 
     order.change_status(dto.new_status)
     await order_repo.save(order)
+
+    if dto.new_status == OrderStatus.delivery and notification_service and order.delivery_user_id:
+        await notification_service.notify(
+            recipient_ids=[order.delivery_user_id],
+            event_type=NotificationEvent.order_shipped,
+            title="Заказ передан в доставку",
+            body=f"Заказ №{order.number} готов к доставке.",
+            related_entity_type="order",
+            related_entity_id=order.id,
+        )
 
 
 async def _validate_tasks_closed(
