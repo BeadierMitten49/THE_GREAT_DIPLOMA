@@ -130,6 +130,9 @@ class FakeProductStockRepository(IProductStockRepository):
         numbers = [s.batch_number for s in self._store.values() if s.batch_year == year]
         return max(numbers) if numbers else 0
 
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
+
 
 class FakeProductionTaskRepository(IProductionTaskRepository):
     def __init__(self) -> None:

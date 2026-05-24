@@ -191,7 +191,10 @@ async def _ship_stock(
         stock = await stock_repo.get_by_id(res.stock_id)
         if stock is not None:
             stock.write_off(res.quantity)
-            await stock_repo.save(stock)
+            if stock.quantity == 0:
+                await stock_repo.delete(stock.id)
+            else:
+                await stock_repo.save(stock)
     await reservation_repo.delete_by_order(order_id)
 
 

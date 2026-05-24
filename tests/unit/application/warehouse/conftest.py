@@ -32,6 +32,9 @@ class FakeRawMaterialStockRepository(IRawMaterialStockRepository):
     async def get_by_raw_material(self, raw_material_id: int) -> list[RawMaterialStock]:
         return [s for s in self._store.values() if s.raw_material_id == raw_material_id]
 
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
+
 
 class FakePackagingStockRepository(IPackagingStockRepository):
     def __init__(self) -> None:
@@ -53,6 +56,9 @@ class FakePackagingStockRepository(IPackagingStockRepository):
 
     async def get_by_packaging(self, packaging_id: int) -> list[PackagingStock]:
         return [s for s in self._store.values() if s.packaging_id == packaging_id]
+
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
 
 
 class FakeProductStockRepository(IProductStockRepository):
@@ -79,6 +85,9 @@ class FakeProductStockRepository(IProductStockRepository):
     async def get_last_batch_number(self, year: int) -> int:
         numbers = [s.batch_number for s in self._store.values() if s.batch_year == year]
         return max(numbers) if numbers else 0
+
+    async def delete(self, id: int) -> None:
+        self._store.pop(id, None)
 
 
 @pytest.fixture

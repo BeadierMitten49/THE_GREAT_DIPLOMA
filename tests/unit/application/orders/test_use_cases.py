@@ -252,7 +252,7 @@ class TestChangeOrderStatusToDelivery:
             number=1, status=OrderStatus.assembly
         )
         await order_repo.save(order)
-        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100, is_assembled=True))
         await reservation_repo.save(
             ProductReservation(order_id=order.id, stock_id=saved_stock.id, quantity=100)
         )
@@ -277,7 +277,7 @@ class TestChangeOrderStatusToDelivery:
             number=1, status=OrderStatus.assembly
         )
         await order_repo.save(order)
-        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100, is_assembled=True))
         dto = ChangeOrderStatusDTO(order_id=order.id, new_status=OrderStatus.delivery)
         with pytest.raises(InsufficientStockError):
             await change_order_status(dto, order_repo, item_repo, reservation_repo, stock_repo)
@@ -290,7 +290,7 @@ class TestChangeOrderStatusToDelivery:
             number=1, status=OrderStatus.assembly
         )
         await order_repo.save(order)
-        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100))
+        await item_repo.save(OrderItem(order_id=order.id, product_id=1, quantity=100, is_assembled=True))
         await reservation_repo.save(
             ProductReservation(order_id=order.id, stock_id=saved_stock.id, quantity=50)
         )
