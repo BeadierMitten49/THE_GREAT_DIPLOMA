@@ -24,6 +24,8 @@ from src.domain.tasks.value_objects import TaskStatus, TaskType
 from src.domain.warehouse.entities import ProductStock
 from src.domain.warehouse.interfaces import IProductStockRepository, IRawMaterialStockRepository
 from src.domain.references.interfaces import IProductRepository
+from src.application.ports.notification_port import INotificationService
+from src.domain.notifications.value_objects import NotificationEvent
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +129,7 @@ async def stop_task(
     reason: str,
     task_repo: IProductionTaskRepository,
     stop_repo: ITaskStopRepository,
+    notification_service: INotificationService | None = None,
 ) -> None:
     task = await get_task(task_id, task_repo)
     task.stop()
@@ -134,6 +137,15 @@ async def stop_task(
     await stop_repo.save(
         TaskStop(task_id=task_id, reason=reason, stopped_at=datetime.now(timezone.utc))
     )
+    if notification_service:
+        await notification_service.notify(
+            recipient_ids=[task.executor_id],
+            event_type=NotificationEvent.task_stopped,
+            title="Задача остановлена",
+            body=f"Задача #{task_id} остановлена. Причина: {reason}",
+            related_entity_type="task",
+            related_entity_id=task_id,
+        )
 
 
 async def resume_task(
@@ -155,6 +167,9 @@ async def complete_task(
     task_repo: IProductionTaskRepository,
     product_repo: IProductRepository,
     completion_repo: ITaskCompletionRepository,
+    notification_service: INotificationService | None = None,
+    director_ids: list[int] | None = None,
+    warehouse_ids: list[int] | None = None,
 ) -> None:
     task = await get_task(dto.task_id, task_repo)
     task.complete()
@@ -186,6 +201,18 @@ async def complete_task(
             )
         )
 
+    if notification_service:
+        recipients = (director_ids or []) + (warehouse_ids or [])
+        if recipients:
+            await notification_service.notify(
+                recipient_ids=recipients,
+                event_type=NotificationEvent.task_completed,
+                title="Задача завершена",
+                body=f"Задача #{dto.task_id} завершена. Произведено: {dto.actual_quantity} шт.",
+                related_entity_type="task",
+                related_entity_id=dto.task_id,
+            )
+
 
 async def close_task(
     task_id: int,
@@ -195,6 +222,8 @@ async def close_task(
     raw_material_stock_repo: IRawMaterialStockRepository,
     raw_material_reservation_repo: IRawMaterialReservationRepository | None = None,
     product_reservation_repo: IProductReservationRepository | None = None,
+    notification_service: INotificationService | None = None,
+    director_ids: list[int] | None = None,
 ) -> None:
     task = await get_task(task_id, task_repo)
     task.close()
@@ -255,6 +284,16 @@ async def close_task(
             ProductReservation(order_id=task.order_id, stock_id=stock.id, quantity=quantity)
         )
 
+    if notification_service and director_ids:
+        await notification_service.notify(
+            recipient_ids=director_ids,
+            event_type=NotificationEvent.warehouse_ops_done,
+            title="Складские операции выполнены",
+            body=f"Задача #{task_id} закрыта. Продукция ({quantity} шт) оприходована на склад.",
+            related_entity_type="task",
+            related_entity_id=task_id,
+        )
+
 
 # ---------------------------------------------------------------------------
 # Management
@@ -265,12 +304,23 @@ async def reassign_task(
     task_id: int,
     new_executor_id: int,
     task_repo: IProductionTaskRepository,
+    notification_service: INotificationService | None = None,
 ) -> None:
     task = await get_task(task_id, task_repo)
     if task.status == TaskStatus.closed:
         raise InvalidFieldError("status", "cannot reassign closed task")
+    old_executor_id = task.executor_id
     task.executor_id = new_executor_id
     await task_repo.save(task)
+    if notification_service and old_executor_id != new_executor_id:
+        await notification_service.notify(
+            recipient_ids=[old_executor_id],
+            event_type=NotificationEvent.task_reassigned,
+            title="Задача переназначена",
+            body=f"Задача #{task_id} передана другому исполнителю.",
+            related_entity_type="task",
+            related_entity_id=task_id,
+        )
 
 
 async def delete_task(

@@ -15,6 +15,7 @@ from src.application.tasks.use_cases import (
     start_task,
     stop_task,
 )
+from src.domain.auth.value_objects import Role
 from src.domain.tasks.entities import ProductionTask
 from src.domain.tasks.value_objects import TaskStatus, TaskType
 from src.infrastructure.db.repositories.auth import UserRepository
@@ -27,6 +28,7 @@ from src.infrastructure.db.repositories.tasks import (
     TaskStopRepository,
 )
 from src.infrastructure.db.repositories.warehouse import ProductStockRepository, RawMaterialStockRepository
+from src.infrastructure.notifications.service import DbNotificationService
 
 
 class ProductionTaskService:
@@ -41,6 +43,11 @@ class ProductionTaskService:
         self._product_reservation_repo = ProductReservationRepository(session)
         self._user_repo = UserRepository(session)
         self._rm_catalog_repo = RawMaterialCatalogRepository(session)
+        self._notification_service = DbNotificationService(session)
+
+    async def _get_user_ids_by_role(self, role: Role) -> list[int]:
+        users = await self._user_repo.get_all()
+        return [u.id for u in users if u.has_role(role)]
 
     async def get(self, task_id: int) -> ProductionTask:
         return await get_task(task_id, self._task_repo)
@@ -81,15 +88,26 @@ class ProductionTaskService:
         await start_task(task_id, self._task_repo)
 
     async def stop(self, task_id: int, reason: str) -> None:
-        await stop_task(task_id, reason, self._task_repo, self._stop_repo)
+        await stop_task(
+            task_id, reason, self._task_repo, self._stop_repo,
+            notification_service=self._notification_service,
+        )
 
     async def resume(self, task_id: int) -> None:
         await resume_task(task_id, self._task_repo, self._stop_repo)
 
     async def complete(self, dto: CompleteTaskDTO) -> None:
-        await complete_task(dto, self._task_repo, self._product_repo, self._completion_repo)
+        director_ids = await self._get_user_ids_by_role(Role.director)
+        warehouse_ids = await self._get_user_ids_by_role(Role.warehouse)
+        await complete_task(
+            dto, self._task_repo, self._product_repo, self._completion_repo,
+            notification_service=self._notification_service,
+            director_ids=director_ids,
+            warehouse_ids=warehouse_ids,
+        )
 
     async def close(self, task_id: int) -> None:
+        director_ids = await self._get_user_ids_by_role(Role.director)
         await close_task(
             task_id, self._task_repo,
             completion_repo=self._completion_repo,
@@ -97,10 +115,15 @@ class ProductionTaskService:
             raw_material_stock_repo=self._stock_repo,
             raw_material_reservation_repo=self._reservation_repo,
             product_reservation_repo=self._product_reservation_repo,
+            notification_service=self._notification_service,
+            director_ids=director_ids,
         )
 
     async def reassign(self, task_id: int, new_executor_id: int) -> None:
-        await reassign_task(task_id, new_executor_id, self._task_repo)
+        await reassign_task(
+            task_id, new_executor_id, self._task_repo,
+            notification_service=self._notification_service,
+        )
 
     async def delete(self, task_id: int) -> None:
         await delete_task(task_id, self._task_repo, self._reservation_repo)

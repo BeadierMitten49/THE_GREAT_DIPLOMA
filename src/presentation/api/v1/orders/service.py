@@ -28,6 +28,7 @@ from src.infrastructure.db.repositories.orders import (
 from src.infrastructure.db.repositories.references import CustomerRepository, ProductRepository
 from src.infrastructure.db.repositories.tasks import ProductionTaskRepository
 from src.infrastructure.db.repositories.warehouse import ProductStockRepository
+from src.infrastructure.notifications.service import DbNotificationService
 
 
 class OrderService:
@@ -40,6 +41,7 @@ class OrderService:
         self._user_repo = UserRepository(session)
         self._product_repo = ProductRepository(session)
         self._task_repo = ProductionTaskRepository(session)
+        self._notification_service = DbNotificationService(session)
 
     async def get(self, order_id: int) -> Order:
         return await get_order(order_id, self._order_repo)
@@ -89,6 +91,7 @@ class OrderService:
         await change_order_status(
             dto, self._order_repo, self._item_repo, self._reservation_repo, self._stock_repo,
             task_repo=self._task_repo,
+            notification_service=self._notification_service,
         )
 
     async def edit(
