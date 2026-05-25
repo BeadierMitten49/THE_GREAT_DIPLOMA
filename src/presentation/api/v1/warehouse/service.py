@@ -57,6 +57,7 @@ from src.infrastructure.db.repositories.warehouse import (
     RawMaterialStockRepository,
 )
 from src.infrastructure.notifications.service import DbNotificationService
+from src.infrastructure.telegram import get_telegram_client
 
 
 class RawMaterialStockService:
@@ -65,7 +66,7 @@ class RawMaterialStockService:
         self._reservation_repo = RawMaterialReservationRepository(session)
         self._catalog_repo = RawMaterialCatalogRepository(session)
         self._user_repo = UserRepository(session)
-        self._notification_service = DbNotificationService(session)
+        self._notification_service = DbNotificationService(session, get_telegram_client())
 
     async def _check_critical_stock(self, raw_material_id: int) -> None:
         catalog = await self._catalog_repo.get_by_id(raw_material_id)
@@ -155,7 +156,7 @@ class ProductStockService:
         self._completion_repo = TaskCompletionRepository(session)
         self._product_repo = ProductRepository(session)
         self._user_repo = UserRepository(session)
-        self._notification_service = DbNotificationService(session)
+        self._notification_service = DbNotificationService(session, get_telegram_client())
 
     async def _check_critical_stock(self, product_id: int) -> None:
         product = await self._product_repo.get_by_id(product_id)

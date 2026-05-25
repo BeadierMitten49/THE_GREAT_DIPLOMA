@@ -24,9 +24,9 @@ class TestAccessControl:
         resp = await client_no_auth.get("/api/v1/users")
         assert resp.status_code == 401
 
-    async def test_get_users_requires_director(self, client_warehouse):
+    async def test_get_users_allowed_for_warehouse(self, client_warehouse):
         resp = await client_warehouse.get("/api/v1/users")
-        assert resp.status_code == 403
+        assert resp.status_code == 200
 
     async def test_create_user_requires_director(self, client_warehouse):
         resp = await client_warehouse.post("/api/v1/users", json={"full_name": "Тест", "password": "pass123"})

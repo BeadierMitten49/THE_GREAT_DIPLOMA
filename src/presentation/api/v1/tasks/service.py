@@ -29,6 +29,7 @@ from src.infrastructure.db.repositories.tasks import (
 )
 from src.infrastructure.db.repositories.warehouse import ProductStockRepository, RawMaterialStockRepository
 from src.infrastructure.notifications.service import DbNotificationService
+from src.infrastructure.telegram import get_telegram_client
 
 
 class ProductionTaskService:
@@ -43,7 +44,7 @@ class ProductionTaskService:
         self._product_reservation_repo = ProductReservationRepository(session)
         self._user_repo = UserRepository(session)
         self._rm_catalog_repo = RawMaterialCatalogRepository(session)
-        self._notification_service = DbNotificationService(session)
+        self._notification_service = DbNotificationService(session, get_telegram_client())
 
     async def _get_user_ids_by_role(self, role: Role) -> list[int]:
         users = await self._user_repo.get_all()
