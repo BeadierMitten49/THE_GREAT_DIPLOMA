@@ -11,9 +11,9 @@ from src.presentation.api.v1.auth.schemas import (
     UserResponse,
 )
 from src.presentation.api.v1.auth.service import UserService
-from src.presentation.api.v1.dependencies import director_only
+from src.presentation.api.v1.dependencies import director_only, director_or_warehouse
 
-router = APIRouter(prefix="/users", tags=["Users"], dependencies=[director_only])
+router = APIRouter(prefix="/users", tags=["Users"], dependencies=[director_or_warehouse])
 
 
 def _to_response(user: User) -> UserResponse:
@@ -41,7 +41,7 @@ async def get_user(id: int, service: UserService = Depends(get_user_service)):
     return _to_response(await service.get(id))
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_user(
     body: CreateUserRequest,
     service: UserService = Depends(get_user_service),
@@ -50,7 +50,7 @@ async def create_user(
     return {"id": user_id}
 
 
-@router.patch("/{id}", response_model=UserResponse)
+@router.patch("/{id}", response_model=UserResponse, dependencies=[director_only])
 async def update_user(
     id: int,
     body: UpdateUserRequest,
@@ -60,7 +60,7 @@ async def update_user(
     return _to_response(await service.get(id))
 
 
-@router.post("/{id}/roles", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/roles", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def set_roles(
     id: int,
     body: SetRolesRequest,
@@ -69,17 +69,17 @@ async def set_roles(
     await service.set_roles(id, body.roles)
 
 
-@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/deactivate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def deactivate_user(id: int, service: UserService = Depends(get_user_service)):
     await service.deactivate(id)
 
 
-@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/activate", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def activate_user(id: int, service: UserService = Depends(get_user_service)):
     await service.activate(id)
 
 
-@router.post("/{id}/bind-telegram", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/bind-telegram", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def bind_telegram(
     id: int,
     body: BindTelegramRequest,
@@ -88,7 +88,7 @@ async def bind_telegram(
     await service.bind_telegram(id, body.telegram_username)
 
 
-@router.post("/{id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{id}/reset-password", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def reset_password(
     id: int,
     body: ResetPasswordRequest,

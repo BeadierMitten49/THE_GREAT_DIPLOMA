@@ -20,7 +20,7 @@ from src.presentation.api.v1.orders.schemas import (
 )
 from src.presentation.api.v1.orders.service import OrderService
 
-router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[director_only])
+router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[director_or_warehouse])
 
 
 async def _to_response(order, service: OrderService) -> OrderResponse:
@@ -115,7 +115,7 @@ async def get_order_drawer(id: int, service: OrderService = Depends(get_order_se
     )
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def create_order(
     body: CreateOrderRequest,
     service: OrderService = Depends(get_order_service),
@@ -144,7 +144,7 @@ async def change_order_status(
     await service.change_status(id, body.new_status)
 
 
-@router.put("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def edit_order(
     id: int,
     body: EditOrderRequest,
@@ -160,7 +160,7 @@ async def edit_order(
     )
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def delete_order(id: int, service: OrderService = Depends(get_order_service)):
     await service.delete(id)
 
@@ -174,7 +174,7 @@ async def get_order_reservations(id: int, service: OrderService = Depends(get_or
     ]
 
 
-@router.post("/{id}/reservations", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("/{id}/reservations", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[director_only])
 async def reserve_product(
     id: int,
     body: ReserveProductRequest,
@@ -184,7 +184,7 @@ async def reserve_product(
     return {"id": reservation_id}
 
 
-@router.delete("/reservation/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/reservation/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def release_reservation(
     reservation_id: int,
     service: OrderService = Depends(get_order_service),
@@ -192,7 +192,7 @@ async def release_reservation(
     await service.release_reservation(reservation_id)
 
 
-@router.delete("/{id}/reservations", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}/reservations", status_code=status.HTTP_204_NO_CONTENT, dependencies=[director_only])
 async def release_all_reservations(
     id: int,
     service: OrderService = Depends(get_order_service),

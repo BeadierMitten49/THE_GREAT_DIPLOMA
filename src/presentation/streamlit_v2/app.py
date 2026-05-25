@@ -20,6 +20,7 @@ def _build_pages(roles: list[str]) -> list[st.Page]:
     if "director" in role_set:
         pages.append(st.Page("pages/references.py", title="Справочники"))
         pages.append(st.Page("pages/orders.py", title="Заказы"))
+        pages.append(st.Page("pages/users.py", title="Пользователи"))
     pages.append(st.Page("pages/settings.py", title="Настройки"))
     return pages
 
