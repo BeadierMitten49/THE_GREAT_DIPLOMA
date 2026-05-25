@@ -63,8 +63,11 @@ def _roles_str(user_roles: list[str]) -> str:
 
 def _tg_label(user: dict) -> str:
     tg = user.get("telegram_username")
-    if tg:
-        return f"🟢 {tg}"
+    tg_id = user.get("telegram_id")
+    if tg and tg_id:
+        return f"🟢 Привязан"
+    if tg and not tg_id:
+        return "🟡 Ожидает /start"
     return "⚪ Не привязан"
 
 
@@ -160,6 +163,31 @@ def _edit_user_dialog(user: dict):
                     client.patch(f"/users/{user['id']}", body={"full_name": full_name})
                 if set(user_roles) != set(user.get("roles", [])):
                     client.post(f"/users/{user['id']}/roles", body={"roles": user_roles})
+                st.rerun()
+            except APIError as e:
+                _err(e)
+
+
+@st.dialog("Привязать Telegram")
+def _bind_telegram_dialog(user: dict):
+    st.caption(f"Пользователь: **{user['full_name']}** ({user['username']})")
+    current_tg = user.get("telegram_username") or ""
+    tg_username = st.text_input(
+        "Telegram username (без @)",
+        value=current_tg.lstrip("@") if current_tg else "",
+        placeholder="ivanov_ivan",
+    )
+    st.caption("После привязки пользователь должен написать боту /start, чтобы получать уведомления.")
+
+    if st.button("Привязать", type="primary", use_container_width=True):
+        if not tg_username or not tg_username.strip():
+            st.error("Введите username")
+        else:
+            try:
+                client.post(
+                    f"/users/{user['id']}/bind-telegram",
+                    body={"telegram_username": tg_username.strip().lstrip("@")},
+                )
                 st.rerun()
             except APIError as e:
                 _err(e)
@@ -291,13 +319,30 @@ elif sel_rows:
 
             st.divider()
 
-            # Section: Telegram (заглушка)
+            # Section: Telegram
             st.markdown("**TELEGRAM**")
             tg = user.get("telegram_username")
-            if tg:
-                _drawer_fields({"TG-username": tg})
+            tg_id = user.get("telegram_id")
+            if tg and tg_id:
+                _drawer_fields({
+                    "Статус": "🟢 Привязан",
+                    "TG-username": f"@{tg.lstrip('@')}",
+                })
+            elif tg and not tg_id:
+                _drawer_fields({
+                    "Статус": "🟡 Ожидает /start",
+                    "TG-username": f"@{tg.lstrip('@')}",
+                })
+                st.caption("Пользователь ещё не написал боту /start")
             else:
-                st.caption("Не привязан")
+                st.caption("⚪ Не привязан")
+
+            if is_director:
+                if st.button(
+                    "Привязать Telegram" if not tg else "Изменить Telegram",
+                    key="dr_bind_tg",
+                ):
+                    _bind_telegram_dialog(user)
 else:
     _table(df, key="tbl_users")
 

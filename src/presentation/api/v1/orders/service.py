@@ -29,6 +29,7 @@ from src.infrastructure.db.repositories.references import CustomerRepository, Pr
 from src.infrastructure.db.repositories.tasks import ProductionTaskRepository
 from src.infrastructure.db.repositories.warehouse import ProductStockRepository
 from src.infrastructure.notifications.service import DbNotificationService
+from src.infrastructure.telegram import get_telegram_client
 
 
 class OrderService:
@@ -41,7 +42,7 @@ class OrderService:
         self._user_repo = UserRepository(session)
         self._product_repo = ProductRepository(session)
         self._task_repo = ProductionTaskRepository(session)
-        self._notification_service = DbNotificationService(session)
+        self._notification_service = DbNotificationService(session, get_telegram_client())
 
     async def get(self, order_id: int) -> Order:
         return await get_order(order_id, self._order_repo)

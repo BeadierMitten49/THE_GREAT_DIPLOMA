@@ -18,13 +18,14 @@ from src.domain.delivery.value_objects import DeliveryStatus
 from src.infrastructure.db.repositories.auth import UserRepository
 from src.infrastructure.db.repositories.delivery import DeliveryRepository
 from src.infrastructure.notifications.service import DbNotificationService
+from src.infrastructure.telegram import get_telegram_client
 
 
 class DeliveryService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = DeliveryRepository(session)
         self._user_repo = UserRepository(session)
-        self._notification_service = DbNotificationService(session)
+        self._notification_service = DbNotificationService(session, get_telegram_client())
 
     async def _get_director_ids(self) -> list[int]:
         users = await self._user_repo.get_all()

@@ -12,5 +12,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     jwt_access_ttl_minutes: int = 15
 
+    # Telegram (optional — no token = no Telegram features)
+    telegram_bot_token: str | None = None
+
 
 settings = Settings()
